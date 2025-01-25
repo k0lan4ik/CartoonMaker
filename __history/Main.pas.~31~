@@ -1,0 +1,82 @@
+unit Main;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Imaging.pngimage;
+
+type
+  TMainForm = class(TForm)
+    Image1: TImage;
+    Background: TImage;
+    Scene: TPanel;
+    procedure OnMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure OnMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure DrawSpline(points: array of TPoint);
+  private
+    SplineImages: array of TImage;
+  public
+
+  end;
+
+var
+  MainForm: TMainForm;
+
+
+
+implementation
+
+{$R *.dfm}
+
+procedure TMainForm.DrawSpline(points: array of TPoint);
+var
+  img: TImage;
+
+begin
+  SetLength(SplineImages, Length(SplineImages) + 1);
+  img := TImage.Create(Self);
+  img.Picture.Bitmap.PixelFormat := pf32bit;
+  img.Picture.Bitmap.Transparent := True;
+    img.Picture.Bitmap.TransparentColor := clWhite;
+    img.Picture.Bitmap.TransparentMode := tmAuto;
+  img.Parent := Scene;
+  img.Left := 0;
+  img.Top := 0;
+  img.Width := points[High(points)].X;
+  img.Height := points[High(points)].Y;
+  img.Anchors := [];
+   img.Canvas.Pen.Color := clBlack;
+  //img.Canvas.Pen.Color := clBlack;
+  img.Canvas.LineTo(100,100);
+  //img.Canvas.PolyBezier(points);
+  //Canvas.PolyBezier(points);
+  SplineImages[High(SplineImages)] := img;
+end;
+
+procedure TMainForm.OnMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+ {ToDo}
+end;
+
+
+
+procedure TMainForm.OnMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+   {ToDo }
+   var arr : array of TPoint;
+   SetLength(arr,400);
+   for var i := Low(arr) to High(arr) - 1 do
+      arr[i] := TPoint.Create(i*2,Trunc((sin(i / 10) + 2) * 20));
+   arr[High(arr)] := TPoint.Create(X,Y);
+   DrawSpline(arr);
+end;
+
+
+
+
+end.
