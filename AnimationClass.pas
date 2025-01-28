@@ -9,7 +9,7 @@ uses Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
 type
   TFrames = array of TBitMap;
 
-  TAnimation = class(TObject)
+  TAnimation = class
   private
   var
     Timer: TTimer;
@@ -21,6 +21,7 @@ type
     constructor Create(DefImage: TImage; AnimationFrames: TFrames;
       Speed: Single);
     procedure Start;
+    procedure Speed(Speed: Single);
     procedure Stop;
     destructor Destroy; override;
   end;
@@ -52,6 +53,11 @@ begin
     if CurrentFrame > High(Frames) then
       CurrentFrame := 0;
   end;
+end;
+
+procedure TAnimation.Speed(Speed: Single);
+begin
+  Timer.Interval := Trunc(Speed * 1000) div Length(Frames);
 end;
 
 procedure TAnimation.Start;

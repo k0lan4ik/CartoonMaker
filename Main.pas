@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, AnimationClass,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Imaging.pngimage;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Imaging.pngimage,
+  Vcl.Imaging.jpeg;
 
 type
   TMainForm = class(TForm)
@@ -70,8 +71,9 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  Animation1 := TAnimation.Create(Image1,LoadFramesFromFolder('Animation\jump'),1);
+  Animation1 := TAnimation.Create(Image2,LoadFramesFromFolder('Animation\run'),1);
   Animation2 := TAnimation.Create(Image2,LoadFramesFromFolder('Animation\Idle\'),2);
+  Animation1.Stop;
   isPlay := false;
 end;
 
@@ -81,9 +83,15 @@ begin
   { ToDo }
   isPlay := not isPlay;
   if isPlay then
-    Animation1.Start
+  begin
+     Animation1.Start;
+     Animation2.Stop;
+  end
   else
+  begin
     Animation1.Stop;
+    Animation2.Start;
+  end;
 end;
 
 procedure TMainForm.OnMouseUp(Sender: TObject; Button: TMouseButton;
