@@ -97,6 +97,8 @@
         </DCCReference>
         <DCCReference Include="CreateSpline.pas"/>
         <DCCReference Include="AnimationClass.pas"/>
+        <DCCReference Include="InteractiveClass.pas"/>
+        <DCCReference Include="SceneObject.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, AnimationClass,
+  System.Classes, Vcl.Graphics, AnimationClass, SceneObject,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg;
 
@@ -14,8 +14,6 @@ type
     Background: TImage;
     Scene: TPanel;
     Image2: TImage;
-    procedure OnMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure OnMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure DrawSpline(points: array of TPoint);
@@ -35,6 +33,7 @@ implementation
 
 var
  Animation1, Animation2: TAnimation;
+ Pirate: TSceneObject;
  isPlay: Boolean;
 
 procedure TMainForm.DrawSpline(points: array of TPoint);
@@ -73,31 +72,17 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
   Animation1 := TAnimation.Create(Image2,LoadFramesFromFolder('Animation\run'),1);
   Animation2 := TAnimation.Create(Image2,LoadFramesFromFolder('Animation\Idle\'),2);
-  Animation1.Stop;
-  isPlay := false;
+  Pirate := TSceneObject.Create('Pirate','Animation\',100,100, Scene);
+  Animation2.Start;
 end;
 
-procedure TMainForm.OnMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  { ToDo }
-  isPlay := not isPlay;
-  if isPlay then
-  begin
-     Animation1.Start;
-     Animation2.Stop;
-  end
-  else
-  begin
-    Animation1.Stop;
-    Animation2.Start;
-  end;
-end;
+
 
 procedure TMainForm.OnMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   { ToDo }
+  Pirate.PlayAnimation('run');
   var
     arr: array of TPoint;
   SetLength(arr, 400);

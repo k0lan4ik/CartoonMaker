@@ -20,7 +20,6 @@ object MainForm: TMainForm
     Color = clDarkgreen
     ParentBackground = False
     TabOrder = 0
-    OnMouseDown = OnMouseDown
     OnMouseUp = OnMouseUp
     object Background: TImage
       Left = 1
@@ -1085,7 +1084,6 @@ object MainForm: TMainForm
         7D384951617854332D87063069ADA34FFB4B585C88E0C4C3845346746DCF3724
         510D378A05AF1533D2AEB8131ACAB4E180F897163F49FC41CE1292F7038D4C8A
         0D69C746B28C9B40481BAD0E908B10C3DE242CB5DF8FFFD9}
-      OnMouseDown = OnMouseDown
       OnMouseUp = OnMouseUp
       ExplicitWidth = 712
       ExplicitHeight = 336

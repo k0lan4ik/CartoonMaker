@@ -42,6 +42,7 @@ begin
   Timer := TTimer.Create(nil);
   Timer.Interval := Trunc(Speed * 1000) div Length(AnimationFrames);
   Timer.OnTimer := OnTimer;
+  Timer.Enabled := False;
 end;
 
 procedure TAnimation.OnTimer(Sender: TObject);

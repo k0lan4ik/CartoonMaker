@@ -4,7 +4,9 @@ uses
   Vcl.Forms,
   Main in 'Main.pas' {MainForm},
   CreateSpline in 'CreateSpline.pas',
-  AnimationClass in 'AnimationClass.pas';
+  AnimationClass in 'AnimationClass.pas',
+  InteractiveClass in 'InteractiveClass.pas',
+  SceneObject in 'SceneObject.pas';
 
 {$R *.res}
 
