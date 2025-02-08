@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, AnimationClass, SceneObject,
+  System.Classes, Vcl.Graphics, AnimationClass, SceneObject, TimeManager,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg;
 
@@ -14,9 +14,10 @@ type
     Background: TImage;
     Scene: TPanel;
     Image2: TImage;
+    Timeline: TPanel;
+    ScrollBox1: TScrollBox;
     procedure OnMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure DrawSpline(points: array of TPoint);
     procedure FormCreate(Sender: TObject);
   private
     SplineImages: array of TImage;
@@ -34,45 +35,29 @@ implementation
 var
  Animation1, Animation2: TAnimation;
  Pirate: TSceneObject;
+ TimeManager: TTimeManager;
  isPlay: Boolean;
 
-procedure TMainForm.DrawSpline(points: array of TPoint);
-var
-  btm: TBitMap;
-  img: TImage;
-begin
-  SetLength(SplineImages, Length(SplineImages) + 1);
 
-  btm := TBitMap.Create(points[High(points)].X,points[High(points)].Y);
-  //btm.PixelFormat := pf32bit;
-  btm.Canvas.Brush.Color := clFuchsia;
-  btm.Canvas.FillRect(Rect(0, 0, btm.Width, btm.Height));
-  btm.Transparent := True;
-  btm.TransparentColor := clFuchsia;
-  //btm.TransparentMode := tmAuto;
-  btm.Canvas.Pen.Color := clWhite;
-  btm.Canvas.MoveTo(100, 100);
-    btm.Canvas.LineTo(200, 200);
-    btm.Canvas.Ellipse(150, 150, 250, 250);
-  // img.Canvas.PolyBezier(points);
-  // Canvas.PolyBezier(points);
-  img := TImage.Create(Self);
-  img.Parent := Scene;
-  img.Top := 0;
-  img.Left := 0;
-  img.Height := btm.Height;
-  img.Width := btm.Height;
-  img.Anchors := [];
-  img.Picture.Bitmap := btm;
-  //img.Canvas.Ellipse(150, 150, 250, 250);
-  SplineImages[High(SplineImages)] := img;
-end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  var ss: TSceneObjects;
   Animation1 := TAnimation.Create(Image2,LoadFramesFromFolder('Animation\run'),1);
   Animation2 := TAnimation.Create(Image2,LoadFramesFromFolder('Animation\Idle\'),2);
-  Pirate := TSceneObject.Create('Pirate','Animation\',100,100, Scene);
+  Pirate := TSceneObject.Create('Pirate','Animation\',100,100,0, Scene);
+  Pirate.AddKeyFrame(100, 100, 2000, 2);
+  Pirate.AddKeyFrame(500, 100, 4000, 1);
+  Pirate.AddKeyFrame(700, 0, 5000, 1);
+  Pirate.AddKeyFrame(900, 100, 6000, 0);
+  Pirate.AddKeyFrame(900, 100, 8000, 2);
+  Pirate.AddKeyFrame(100, 100, 12000, 0);
+  Pirate.AddKeyFrame(100, 100, 13000, 1);
+  Pirate.AddKeyFrame(100, 0, 14000, 0);
+  Pirate.AddKeyFrame(100, 100, 15000, 0);
+  SetLength(ss,1);
+  ss[0] := Pirate;
+  TimeManager := TTimeManager.Create(ss);
   Animation2.Start;
 end;
 
@@ -82,14 +67,9 @@ procedure TMainForm.OnMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   { ToDo }
-  Pirate.PlayAnimation('run');
-  var
-    arr: array of TPoint;
-  SetLength(arr, 400);
-  for var i := Low(arr) to High(arr) - 1 do
-    arr[i] := TPoint.Create(i * 2, Trunc((sin(i / 10) + 2) * 20));
-  arr[High(arr)] := TPoint.Create(X, Y);
-  DrawSpline(arr);
+  Pirate.PlayAnimation(2);
+  TimeManager.Play;
+  //Pirate.SetPosition(200, 200);
 end;
 
 end.

@@ -11,17 +11,20 @@ uses
 type
   TInteractive = class
   private
-    Qbject: TObject;
+    Image: TImage;
+    Selected: Boolean;
   public
-    procedure OnMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    constructor Create(AOwner: TPanel); overload;
   end;
 
 implementation
 
-procedure TInteractive.OnMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+constructor TInteractive.Create(AOwner: TPanel);
 begin
+  self.Image := TImage.Create(AOwner);
+
+
 
 end;
+
 end.

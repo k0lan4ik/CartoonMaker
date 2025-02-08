@@ -99,6 +99,7 @@
         <DCCReference Include="AnimationClass.pas"/>
         <DCCReference Include="InteractiveClass.pas"/>
         <DCCReference Include="SceneObject.pas"/>
+        <DCCReference Include="TimeManager.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -6,7 +6,8 @@ uses
   CreateSpline in 'CreateSpline.pas',
   AnimationClass in 'AnimationClass.pas',
   InteractiveClass in 'InteractiveClass.pas',
-  SceneObject in 'SceneObject.pas';
+  SceneObject in 'SceneObject.pas',
+  TimeManager in 'TimeManager.pas';
 
 {$R *.res}
 

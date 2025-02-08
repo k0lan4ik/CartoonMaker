@@ -15,13 +15,15 @@ type
     Timer: TTimer;
     CurrentFrame: Integer;
     Image: TImage;
+    Speed: Single;
     Frames: TFrames;
     procedure OnTimer(Sender: TObject);
   public
     constructor Create(DefImage: TImage; AnimationFrames: TFrames;
       Speed: Single);
-    procedure Start;
-    procedure Speed(Speed: Single);
+    procedure Start; overload;
+    procedure Start(Speed: Single); overload;
+    procedure SetSpeed(Speed: Single);
     procedure Stop;
     destructor Destroy; override;
   end;
@@ -39,6 +41,7 @@ begin
   Image := DefImage;
   Frames := AnimationFrames;
   CurrentFrame := Low(Frames);
+  self.Speed := Speed;
   Timer := TTimer.Create(nil);
   Timer.Interval := Trunc(Speed * 1000) div Length(AnimationFrames);
   Timer.OnTimer := OnTimer;
@@ -56,9 +59,10 @@ begin
   end;
 end;
 
-procedure TAnimation.Speed(Speed: Single);
+procedure TAnimation.SetSpeed(Speed: Single);
 begin
   Timer.Interval := Trunc(Speed * 1000) div Length(Frames);
+  //self.Speed := Speed;
 end;
 
 procedure TAnimation.Start;
@@ -66,8 +70,16 @@ begin
   Timer.Enabled := True;
 end;
 
+procedure TAnimation.Start(Speed: Single);
+begin
+  Timer.Interval := Trunc(Speed * 1000) div Length(Frames);
+  Timer.Enabled := True;
+end;
+
 procedure TAnimation.Stop;
 begin
+  self.CurrentFrame := Low(self.Frames);
+  Timer.Interval := Trunc(Speed * 1000) div Length(self.Frames);
   Timer.Enabled := False;
 end;
 

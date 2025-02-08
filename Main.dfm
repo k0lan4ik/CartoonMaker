@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'CartoonMaker'
-  ClientHeight = 439
-  ClientWidth = 747
+  ClientHeight = 726
+  ClientWidth = 908
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,8 +15,8 @@ object MainForm: TMainForm
   object Scene: TPanel
     Left = 0
     Top = 0
-    Width = 753
-    Height = 449
+    Width = 913
+    Height = 561
     Color = clDarkgreen
     ParentBackground = False
     TabOrder = 0
@@ -24,8 +24,8 @@ object MainForm: TMainForm
     object Background: TImage
       Left = 1
       Top = 1
-      Width = 751
-      Height = 447
+      Width = 911
+      Height = 559
       Align = alClient
       Picture.Data = {
         0A544A504547496D616765E9830000FFD8FFE000104A46494600010101004800
@@ -1084,12 +1084,12 @@ object MainForm: TMainForm
         7D384951617854332D87063069ADA34FFB4B585C88E0C4C3845346746DCF3724
         510D378A05AF1533D2AEB8131ACAB4E180F897163F49FC41CE1292F7038D4C8A
         0D69C746B28C9B40481BAD0E908B10C3DE242CB5DF8FFFD9}
+      Stretch = True
       OnMouseUp = OnMouseUp
-      ExplicitWidth = 712
-      ExplicitHeight = 336
+      ExplicitTop = -1
     end
     object Image1: TImage
-      Left = 72
+      Left = 40
       Top = 248
       Width = 113
       Height = 121
@@ -1531,6 +1531,22 @@ object MainForm: TMainForm
         7583B068BCF736F6D19F1F32DCEA8FED490968AB741DEC860018AFCEDAA36813
         7F9916DC1169C06D08F59D6C23F920EA8936704F490376535677F8FF012E74C5
         02D6FAEA4803BEC2F57FD834B63D8AB12E1B0000000049454E44AE426082}
+    end
+  end
+  object Timeline: TPanel
+    Left = 0
+    Top = 563
+    Width = 908
+    Height = 163
+    Align = alBottom
+    TabOrder = 1
+    object ScrollBox1: TScrollBox
+      Left = 1
+      Top = 1
+      Width = 906
+      Height = 161
+      Align = alClient
+      TabOrder = 0
     end
   end
 end
