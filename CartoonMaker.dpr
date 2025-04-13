@@ -7,7 +7,11 @@ uses
   AnimationClass in 'AnimationClass.pas',
   InteractiveClass in 'InteractiveClass.pas',
   SceneObject in 'SceneObject.pas',
-  TimeManager in 'TimeManager.pas';
+  TimeManager in 'TimeManager.pas',
+  LoadManager in 'LoadManager.pas',
+  SceneManager in 'SceneManager.pas',
+  DialogAddFrame in 'DialogAddFrame.pas' {AddFrame},
+  CustomSpinEdit in 'CustomSpinEdit.pas';
 
 {$R *.res}
 
@@ -15,5 +19,6 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainForm, MainForm);
+  Application.CreateForm(TAddFrame, AddFrame);
   Application.Run;
 end.

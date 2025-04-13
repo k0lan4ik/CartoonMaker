@@ -1,0 +1,188 @@
+unit TimeLine;
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Graphics, Winapi.Windows,
+  System.Math;
+
+
+
+type
+  TTimeLinePositionEvent = procedure(Sender: TObject; NewPosition: Cardinal) of object;
+
+  TTimeLine = class(TCustomControl)
+   private
+    FStartTime: Cardinal;
+    FEndTime: Cardinal;
+    FCurrentPos: Cardinal;
+    FZoomLevel: Double;
+    FOnPositionChange: TTimeLinePositionEvent;
+    procedure SetCurrentPos(const Value: Cardinal);
+    procedure SetStartTime(const Value: Cardinal);
+    procedure SetEndTime(const Value: Cardinal);
+    function TimeToX(ATime: Cardinal): Integer;
+    function XToTime(X: Integer): Cardinal;
+ protected
+    procedure Paint; override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;override;
+    public
+    constructor Create(AOwner: TComponent); override;
+    function TimeRange: Cardinal;
+  published
+    property StartTime: Cardinal read FStartTime write SetStartTime;
+    property EndTime: Cardinal read FEndTime write SetEndTime;
+    property CurrentPosition: Cardinal read FCurrentPos write SetCurrentPos;
+    property OnPositionChange: TTimeLinePositionEvent read FOnPositionChange write FOnPositionChange;
+    property Align;
+    property OnClick;
+    property OnDblClick;
+    property OnMouseDown;
+    property OnMouseMove;
+    property OnMouseUp;
+  end;
+
+procedure Register;
+
+implementation
+
+procedure Register;
+begin
+  RegisterComponents('Samples', [TTimeLine]);
+end;
+
+{ TTimelineControl }
+
+constructor TTimeLine.Create(AOwner: TComponent);
+begin
+  inherited;
+  Width := 400;
+  Height := 60;
+  FStartTime := 0;
+  FEndTime := 5000;
+  FCurrentPos := 0;
+  FZoomLevel := 1.0;
+  DoubleBuffered := True;
+end;
+
+function TTimeline.TimeRange: Cardinal;
+begin
+  Result := FEndTime - FStartTime;
+end;
+
+procedure TTimeLine.Paint;
+var
+  TimeStep: Cardinal;
+  i: Integer;
+  X, TextY: Integer;
+  CurrentX: Integer;
+  TimeMark: Cardinal;
+begin
+  inherited;
+  with Canvas do
+  begin
+    // Draw background
+    Brush.Color := clWhite;
+    FillRect(ClientRect);
+
+    // Draw timeline axis
+    Pen.Color := clBlack;
+    MoveTo(0, Height div 2);
+    LineTo(Width, Height div 2);
+
+    // Calculate time step for marks (10 intervals)
+    TimeStep := TimeRange div 10;
+
+    // Draw time marks
+    TextY := Height div 2 + 5;
+    for i := 0 to 10 do
+    begin
+      TimeMark := FStartTime + i * TimeStep;
+      X := TimeToX(TimeMark);
+      MoveTo(X, Height div 2 - 5);
+      LineTo(X, Height div 2 + 5);
+      TextOut(X - 20, TextY, IntToStr(TimeMark));
+    end;
+
+    // Draw current position
+    if (FCurrentPos >= FStartTime) and (FCurrentPos <= FEndTime) then
+    begin
+      Pen.Color := clRed;
+      CurrentX := TimeToX(FCurrentPos);
+      MoveTo(CurrentX, 0);
+      LineTo(CurrentX, Height);
+    end;
+  end;
+end;
+
+function TTimeLine.TimeToX(ATime: Cardinal): Integer;
+begin
+  if TimeRange = 0 then Exit(0);
+  Result := Round((ATime - FStartTime) / TimeRange * Width);
+end;
+
+function TTimeLine.XToTime(X: Integer): Cardinal;
+begin
+  Result := FStartTime + Round((X / Width) * TimeRange);
+end;
+
+procedure TTimeline.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  if Button = mbLeft then
+  begin
+    CurrentPosition := XToTime(X);
+    if Assigned(FOnPositionChange) then
+      FOnPositionChange(Self, FCurrentPos);
+    Invalidate;
+  end;
+end;
+
+function TTimeline.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+var
+  ZoomCenter: Cardinal;
+begin
+  Result := inherited;
+  ZoomCenter := XToTime(MousePos.X);
+
+  if WheelDelta > 0 then
+    FZoomLevel := FZoomLevel * 1.1
+  else
+    FZoomLevel := FZoomLevel / 1.1;
+
+  // Adjust time range based on zoom
+  FStartTime := ZoomCenter - Round((ZoomCenter - FStartTime) / FZoomLevel);
+  FEndTime := ZoomCenter + Round((FEndTime - ZoomCenter) / FZoomLevel);
+
+  Invalidate;
+end;
+
+procedure TTimeline.SetCurrentPos(const Value: Cardinal);
+begin
+  FCurrentPos := Value;
+  if FCurrentPos < FStartTime then FCurrentPos := FStartTime;
+  if FCurrentPos > FEndTime then FCurrentPos := FEndTime;
+  Invalidate;
+end;
+
+procedure TTimeline.SetEndTime(const Value: Cardinal);
+begin
+  if Value > FStartTime then
+    FEndTime := Value
+  else
+    FEndTime := FStartTime + 1;
+  Invalidate;
+end;
+
+procedure TTimeline.SetStartTime(const Value: Cardinal);
+begin
+  if Value < FEndTime then
+    FStartTime := Value
+  else
+    FStartTime := FEndTime - 1;
+  Invalidate;
+end;
+
+
+end.

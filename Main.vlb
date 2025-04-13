@@ -1,13 +1,4 @@
-﻿[Scene]
+﻿[]
 Coordinates=10,10,44,51
-
-[Image1]
-Coordinates=71,10,49,51
-
-[Background]
-Coordinates=10,78,74,51
-
-[]
-Coordinates=138,10,45,51
 Visible=True
 
