@@ -60,7 +60,18 @@ object MainForm: TMainForm
     Height = 163
     Align = alBottom
     TabOrder = 1
-    OnClick = TimelineClick
+    object ScrollBox1: TScrollBox
+      Left = 1
+      Top = 1
+      Width = 1089
+      Height = 161
+      Align = alClient
+      TabOrder = 0
+      ExplicitLeft = 576
+      ExplicitTop = 64
+      ExplicitWidth = 185
+      ExplicitHeight = 41
+    end
   end
   object Loaded: TListBox
     Left = 0

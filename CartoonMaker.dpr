@@ -11,7 +11,8 @@ uses
   LoadManager in 'LoadManager.pas',
   SceneManager in 'SceneManager.pas',
   DialogAddFrame in 'DialogAddFrame.pas' {AddFrame},
-  CustomSpinEdit in 'CustomSpinEdit.pas';
+  CustomSpinEdit in 'CustomSpinEdit.pas',
+  TimeLine in 'TTimeLine\TimeLine.pas';
 
 {$R *.res}
 

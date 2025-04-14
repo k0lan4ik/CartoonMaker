@@ -107,6 +107,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="CustomSpinEdit.pas"/>
+        <DCCReference Include="TTimeLine\TimeLine.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

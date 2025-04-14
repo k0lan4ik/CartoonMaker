@@ -3,46 +3,69 @@ unit Timeline;
 interface
 
 uses
-  System.Classes, System.SysUtils, Vcl.Controls, Vcl.Graphics, Winapi.Windows;
+  System.Classes, System.SysUtils, Vcl.Controls, Vcl.Graphics, Winapi.Windows,
+  SceneManager, Math;
 
 type
+
   TTimeline = class(TCustomControl)
   private
     { Private declarations }
-    FStartValue: Cardinal;     // Начальное значение
-    FEndValue: Cardinal;       // Конечное значение
-    FCurrentPos: Cardinal;     // Текущая позиция
-    FZoom: Double;            // Уровень масштабирования
+    FObjs: PSceneObj;
+    FHeightObj: Integer;
+    FFramesColor: TColor;
 
+    FStartTime: Cardinal; // Начальное значение
+    FEndTime: Cardinal; // Конечное значение
+    FCurrentPos: Cardinal; // Текущая позиция
+    FZoom: Double; // Уровень масштабирования
+    FScrollX: Integer;
+    FTimeScale: Real;
+
+    FObjectZoneWight: Integer;
+    { TimeZone }
+    FTimeRulerHeight: Integer;
+    FTimeColor: TColor;
+    FGridColor: TColor;
+    FGridPading: Integer;
+    FTimeFont: TFont;
     { События }
     FOnPositionChange: TNotifyEvent;
 
     { Вспомогательные методы }
-    function ValueToPos(Value: Integer): Integer;
-    function PosToValue(Pos: Integer): Integer;
     procedure SetCurrentPos(const Value: Cardinal);
 
   protected
     { Protected declarations }
     procedure Paint; override;
-    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
+      MousePos: TPoint): Boolean;
+
+    procedure DrawTimeRuler;
+    procedure DrawObjects;
+    function CalculateOptimalTimeStep(RangeMs: Cardinal): Cardinal;
+    function TimeToX(Time: Cardinal): Integer;
+    function XToTime(X: Integer): Cardinal;
 
   public
     { Public declarations }
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(AOwner: TComponent; Objects: PSceneObj);
     destructor Destroy; override;
 
   published
     { Published declarations }
     { Свойства }
-    property StartValue: Cardinal read FStartValue write FStartValue default 0;
-    property EndValue: Cardinal read FEndValue write FEndValue default 100;
-    property CurrentPosition: Cardinal read FCurrentPos write SetCurrentPos default 0;
+    property StartTime: Cardinal read FStartTime write FStartTime default 0;
+    property EndTime: Cardinal read FEndTime write FEndTime default 100;
+    property CurrentPosition: Cardinal read FCurrentPos write SetCurrentPos
+      default 0;
 
     { События }
-    property OnPositionChange: TNotifyEvent read FOnPositionChange write FOnPositionChange;
+    property OnPositionChange: TNotifyEvent read FOnPositionChange
+      write FOnPositionChange;
 
     { Наследуемые свойства }
     property Align;
@@ -74,7 +97,7 @@ end;
 
 { TTimeline }
 
-constructor TTimeline.Create(AOwner: TComponent);
+constructor TTimeline.Create(AOwner: TComponent; Objects: PSceneObj);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csOpaque];
@@ -82,10 +105,27 @@ begin
   { Инициализация значений }
   Width := 400;
   Height := 60;
-  FStartValue := 0;
-  FEndValue := 1000;
+  FStartTime := 0;
+  FEndTime := 10000;
   FCurrentPos := 0;
-  FZoom := 1.0;
+  FZoom := 1;
+
+  FTimeRulerHeight := 30;
+  FTimeScale := 0.1;
+  FGridPading := 5;
+  FGridColor := $00424242;
+
+  FObjectZoneWight := 200;
+
+  FTimeColor := clBlack;
+  FTimeFont := TFont.Create;
+  FTimeFont.Name := 'Tahoma';
+  FTimeFont.Size := 8;
+  FTimeFont.Color := clBlack;
+
+  FFramesColor := $FDFFC9;
+  FHeightObj := 40;
+  FObjs := Objects;
 end;
 
 destructor TTimeline.Destroy;
@@ -93,7 +133,130 @@ begin
   inherited Destroy;
 end;
 
+function TTimeline.CalculateOptimalTimeStep(RangeMs: Cardinal): Cardinal;
+begin
+
+  if RangeMs <= 5000 then
+    Result := 500
+  else if RangeMs <= 15000 then
+    Result := 1000
+  else if RangeMs <= 30000 then
+    Result := 2000
+  else if RangeMs <= 60000 then
+    Result := 5000
+  else
+    Result := 10000;
+end;
+
+function TTimeline.TimeToX(Time: Cardinal): Integer;
+begin
+  Result := Round((Time * FTimeScale * FZoom) - FScrollX + FObjectZoneWight);
+end;
+
+function TTimeline.XToTime(X: Integer): Cardinal;
+begin
+  Result := Max(0, Round((X + FScrollX - FObjectZoneWight) /
+    (FTimeScale * FZoom)));
+end;
+
+procedure TTimeline.DrawTimeRuler;
+var
+  StartTime, EndTime, TimeStep: Cardinal;
+  Seconds, Minutes, Padding: Integer;
+  TimeLabel: string;
+  i, XPos: Integer;
+begin
+  with Canvas do
+  begin
+    Pen.Color := FTimeColor;
+    Font.Assign(FTimeFont);
+    Brush.Style := bsClear;
+
+    Rectangle(FObjectZoneWight, 0, Width, FTimeRulerHeight);
+    MoveTo(FObjectZoneWight, FTimeRulerHeight div 2);
+    LineTo(Width, FTimeRulerHeight div 2);
+
+    StartTime := XToTime(FObjectZoneWight);
+    EndTime := XToTime(Width);
+    TimeStep := CalculateOptimalTimeStep(EndTime - StartTime);
+    i := StartTime - (StartTime mod TimeStep);
+    while i <= EndTime do
+    begin
+      XPos := TimeToX(i);
+
+      Pen.Color := FGridColor;
+      Padding := FGridPading div 2 + FGridPading *
+        (Integer((i mod TimeStep) <> 0) +
+        Integer((i mod (TimeStep div 2)) <> 0));
+      MoveTo(XPos, Padding);
+      LineTo(XPos, FTimeRulerHeight - Padding);
+
+      if (i >= StartTime) and (i mod TimeStep = 0) then
+      begin
+
+        Minutes := i div 60000;
+        Seconds := (i div 1000) mod 60;
+        TimeLabel := Format('%2.2d:%2.2d', [Minutes, Seconds]);
+
+        TextOut(XPos + 2, 1, TimeLabel);
+      end;
+
+      Inc(i, TimeStep div 10);
+    end;
+  end;
+end;
+
+procedure TTimeline.DrawObjects;
+var
+  Temp: PSceneObj;
+  Key: PSceneKeyFrame;
+  TopNext: Integer;
+  R: TRect;
+  S: String;
+begin
+  Temp := FObjs^.Next;
+  TopNext := FTimeRulerHeight;
+  with Canvas do
+    while Temp <> nil do
+    begin
+      if Height < TopNext + FHeightObj then
+      begin
+        Height := TopNext + FHeightObj;
+      end;
+
+      Rectangle(0, TopNext, Width, TopNext + FHeightObj);
+      R := Rect(0, TopNext, FObjectZoneWight, TopNext + FHeightObj);
+      TextRect(R, Temp^.Name, [tfSingleLine, tfVerticalCenter, tfCenter,
+        tfEndEllipsis]);
+
+      Key := Temp^.KeyFrames;
+      while (Key <> nil)  and (Key^.Prev <> nil) do
+        Key := Key^.Prev;
+      while Key <> nil do
+      begin
+        Brush.Color := FFramesColor;
+        with Key^.Inf do
+          R := Rect(TimeToX(StartTime), TopNext, TimeToX(EndTime),
+            TopNext + FHeightObj);
+        Rectangle(R);
+        S := StringReplace(Key^.Inf.Animation, '.png', '', []);
+        TextRect(R, S, [tfSingleLine, tfVerticalCenter, tfCenter,
+          tfEndEllipsis]);
+        Key := Key.Next;
+        Brush.Style := bsClear ;
+      end;
+
+      Inc(TopNext, FHeightObj);
+
+      Temp := Temp^.Next
+    end;
+
+end;
+
 procedure TTimeline.Paint;
+var
+  R: TRect;
+  S: String;
 begin
   inherited;
   with Canvas do
@@ -102,26 +265,26 @@ begin
     Brush.Color := Self.Color;
     FillRect(ClientRect);
 
-    { 2. Отрисовка временной шкалы }
     Pen.Color := clBlack;
-    MoveTo(0, Height div 2);
-    LineTo(Width, Height div 2);
+    Rectangle(0, 0, FObjectZoneWight, FTimeRulerHeight);
+    R := Rect(0, 0, FObjectZoneWight, FTimeRulerHeight);
+    S := 'Объекты';
+    TextRect(R, S, [tfSingleLine, tfVerticalCenter, tfCenter, tfEndEllipsis]);
+
+    { 2. Отрисовка временной шкалы }
+    MoveTo(FObjectZoneWight, 0);
+    Pen.Width := 2;
+    LineTo(FObjectZoneWight, Height);
+    Pen.Width := 1;
+    DrawTimeRuler;
+
+    DrawObjects;
 
     { 3. Отрисовка текущей позиции }
     Pen.Color := clRed;
-    MoveTo(ValueToPos(FCurrentPos), 0);
-    LineTo(ValueToPos(FCurrentPos), Height);
+    MoveTo(TimeToX(FCurrentPos), 0);
+    LineTo(TimeToX(FCurrentPos), Height);
   end;
-end;
-
-function TTimeline.ValueToPos(Value: Integer): Integer;
-begin
-  Result := Round((Value - FStartValue) / (FEndValue - FStartValue) * Width);
-end;
-
-function TTimeline.PosToValue(Pos: Integer): Integer;
-begin
-  Result := Round((Pos / Width) * (FEndValue - FStartValue)) + FStartValue;
 end;
 
 procedure TTimeline.SetCurrentPos(const Value: Cardinal);
@@ -130,15 +293,22 @@ begin
   begin
     FCurrentPos := Value;
     Invalidate;
-    if Assigned(FOnPositionChange) then FOnPositionChange(Self);
+    
   end;
 end;
 
-procedure TTimeline.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TTimeline.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
 begin
   inherited;
-  if Button = mbLeft then
-    CurrentPosition := PosToValue(X);
+  if (Button = mbLeft) and (X > FObjectZoneWight) then
+  begin
+    
+    CurrentPosition := XToTime(X);
+
+    if Assigned(FOnPositionChange) then
+      FOnPositionChange(Self);
+  end;
 end;
 
 procedure TTimeline.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -147,7 +317,8 @@ begin
   { Реализация перемещения маркера }
 end;
 
-function TTimeline.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+function TTimeline.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
+  MousePos: TPoint): Boolean;
 begin
   Result := inherited;
   { Реализация масштабирования }

@@ -45,6 +45,7 @@ type
     N7: TMenuItem;
     spLeft: TSplitter;
     spBottop: TSplitter;
+    ScrollBox1: TScrollBox;
     procedure SceneRender(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LoadedDrawItem(Control: TWinControl; Index: Integer; Rect: TRect;
@@ -59,8 +60,7 @@ type
     procedure actAddKeyFrameExecute(Sender: TObject);
     procedure actPlayExecute(Sender: TObject);
     procedure spLeftMoved(Sender: TObject);
-    procedure TimelineClick(Sender: TObject);
-
+    procedure CursorUpdate(Sender: TObject);
   private
     SplineImages: array of TImage;
     FBuffer: TBitmap;
@@ -113,6 +113,19 @@ begin
   FBuffer.Canvas.Brush.Color := clWhite;
   FBuffer.Canvas.FillRect(Rect(0, 0, FBuffer.Width, FBuffer.Height));
 
+  TimeLinemain := TTimeline.Create(ScrollBox1, SceneObjs);
+  TimeLinemain.Parent := ScrollBox1;
+  TimeLinemain.Height := ScrollBox1.ClientHeight + 1;
+  TimeLinemain.Width := ScrollBox1.ClientWidth;
+  TimeLinemain.OnPositionChange := CursorUpdate;
+
+end;
+
+procedure TMainForm.CursorUpdate(Sender: TObject);
+begin
+  TimeCursor := (Sender as TTimeline).CurrentPosition;
+  EditTime(TimeCursor,SceneObjs);
+  pbScene.Invalidate;
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);
@@ -249,6 +262,7 @@ begin
         AddKeyFrame(SelectedObj, SelectedObj.CurPoint, SelectedObj.BaseHeight,
           isMirror, Anim, TimeCursor, TimeCursor + delTime);
         TimeCursor := TimeCursor + delTime + 1;
+        TimeLinemain.CurrentPosition := TimeCursor;
         EditTime(TimeCursor, SceneObjs);
       end;
       pbScene.Invalidate;
@@ -283,11 +297,6 @@ begin
     end;
     Temp := Temp.Next;
   end;
-
-end;
-
-function CopyPNG(): TPngImage;
-begin
 
 end;
 
@@ -330,7 +339,7 @@ begin
       begin
         if Temp^.Obj^.Animations.ContainsKey('idle.png') then
         begin
-          Clip := GetAnimation(Temp^.Obj, 'idle.png');
+          Clip.Assign(GetAnimation(Temp^.Obj, 'idle.png'));
           Cadr := (TimeCursor div 150) mod (Clip.Width div Clip.Height);
           with Temp^.Obj.MainImage do
           begin
@@ -367,7 +376,7 @@ begin
 
     Temp := Temp^.Next;
   end;
-  // Clip.Free;
+  Clip.Free;
 end;
 
 procedure TMainForm.pbSceneMouseUp(Sender: TObject; Button: TMouseButton;
@@ -426,6 +435,7 @@ begin
       LoadObjs[NameObj], NameObj);
     Loaded.ItemIndex := -1;
     pbScene.Invalidate;
+    TimeLinemain.Invalidate;
   end
   else if not isPlay then
   begin
@@ -491,6 +501,8 @@ begin
   if isPlay then
   begin
     TimeCursor := GetTickCount - StartTime;
+    TimeLinemain.CurrentPosition := TimeCursor;
+    TimeLineMain.Update;
     pbScene.Invalidate;
     EditTime(TimeCursor, SceneObjs);
     if TimeCursor >= EndTime then
@@ -502,13 +514,6 @@ procedure TMainForm.spLeftMoved(Sender: TObject);
 begin
   pbScene.Invalidate;
   Loaded.Invalidate;
-end;
-
-procedure TMainForm.TimelineClick(Sender: TObject);
-begin
-   TimelineMain := TTimeline.Create((Sender as TPanel));
-   TimeLineMain.Parent := (Sender as TPanel);
-   TimeLineMain.Align := alClient;
 end;
 
 end.
