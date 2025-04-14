@@ -23,6 +23,7 @@ type
     procedure seTimeChange(Sender: TObject);
     procedure SetParams(const Time: Cardinal; const Anims: TFrameAnimsObj;const isMirror: Boolean);
     procedure GetParams(var Time: Cardinal; var Anim: String; var isMirror: Boolean);
+    procedure SetMaxTime(const Time: Cardinal);
   private
     { Private declarations }
   public
@@ -47,6 +48,11 @@ begin
     TSpinEdit(Sender).Caption := FloatToStr(TSpinEdit(Sender).Value);
 end;
 
+procedure TAddFrame.SetMaxTime(const Time: Cardinal);
+begin
+  seTime.MaxValue := Time;
+end;
+
 procedure TAddFrame.SetParams(const Time: Cardinal;
   const Anims: TFrameAnimsObj;const isMirror: Boolean);
 var
@@ -54,6 +60,7 @@ var
 begin
   seTime.Value := Time / 1000;
   cbIsMirror.Checked := isMirror;
+  cbAnim.Items.Clear;
   for Anim in Anims.Keys.ToArray do
   begin
     if Anim = 'idle.png' then

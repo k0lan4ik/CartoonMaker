@@ -27,7 +27,7 @@ type
   TSceneObj = record
     Name: string;
     Obj: PLoadObj;
-    StartPoint: TPoint;
+    //StartPoint: TPoint;
     CurPoint: TPoint;
     BaseHeight: Integer;
     KeyFrames: PSceneKeyFrame;
@@ -58,9 +58,14 @@ begin
 
   Temp^.Name := Name;
   Temp^.Obj := LoadObj;
-  Temp^.StartPoint := StartPoint;
+  //Temp^.StartPoint := StartPoint;
   Temp^.CurPoint := StartPoint;
-  Temp^.KeyFrames:= nil;
+  New(Temp^.KeyFrames);
+  Temp^.KeyFrames.Inf.EndPoint := StartPoint;
+  Temp^.KeyFrames.Inf.StartTime := 0;
+  Temp^.KeyFrames.Inf.EndTime := 0;
+  Temp^.KeyFrames.Next := nil;
+  Temp^.KeyFrames.Prev := nil;
   Temp^.BaseHeight := Height;
 end;
 

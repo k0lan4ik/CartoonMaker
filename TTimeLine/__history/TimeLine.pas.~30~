@@ -29,8 +29,6 @@ type
     FGridColor: TColor;
     FGridPading: Integer;
     FTimeFont: TFont;
-
-    FMoveTimeCursor: Boolean;
     { События }
     FOnPositionChange: TNotifyEvent;
 
@@ -41,8 +39,6 @@ type
     { Protected declarations }
     procedure Paint; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer); override;
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
@@ -130,8 +126,6 @@ begin
   FFramesColor := $FDFFC9;
   FHeightObj := 40;
   FObjs := Objects;
-
-  FMoveTimeCursor := false;
 end;
 
 destructor TTimeline.Destroy;
@@ -236,7 +230,7 @@ begin
         tfEndEllipsis]);
 
       Key := Temp^.KeyFrames;
-      while (Key <> nil) and (Key^.Prev <> nil) do
+      while (Key <> nil)  and (Key^.Prev <> nil) do
         Key := Key^.Prev;
       while Key <> nil do
       begin
@@ -249,7 +243,7 @@ begin
         TextRect(R, S, [tfSingleLine, tfVerticalCenter, tfCenter,
           tfEndEllipsis]);
         Key := Key.Next;
-        Brush.Style := bsClear;
+        Brush.Style := bsClear ;
       end;
 
       Inc(TopNext, FHeightObj);
@@ -299,7 +293,7 @@ begin
   begin
     FCurrentPos := Value;
     Invalidate;
-
+    
   end;
 end;
 
@@ -309,31 +303,18 @@ begin
   inherited;
   if (Button = mbLeft) and (X > FObjectZoneWight) then
   begin
+    
     CurrentPosition := XToTime(X);
-    FMoveTimeCursor := True;
+
     if Assigned(FOnPositionChange) then
       FOnPositionChange(Self);
   end;
-end;
-
-procedure TTimeline.MouseUp(Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-begin
- // if FMoveTimeCursor then
-     FMoveTimeCursor := false;
 end;
 
 procedure TTimeline.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
-  if FMoveTimeCursor and (X > FObjectZoneWight) then
-  begin
-
-    CurrentPosition := XToTime(X);
-
-    if Assigned(FOnPositionChange) then
-      FOnPositionChange(Self);
-  end;
+  { Реализация перемещения маркера }
 end;
 
 function TTimeline.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;

@@ -309,6 +309,7 @@ begin
   inherited;
   if (Button = mbLeft) and (X > FObjectZoneWight) then
   begin
+
     CurrentPosition := XToTime(X);
     FMoveTimeCursor := True;
     if Assigned(FOnPositionChange) then

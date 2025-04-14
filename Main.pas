@@ -45,7 +45,6 @@ type
     N7: TMenuItem;
     spLeft: TSplitter;
     spBottop: TSplitter;
-    ScrollBox1: TScrollBox;
     procedure SceneRender(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LoadedDrawItem(Control: TWinControl; Index: Integer; Rect: TRect;
@@ -61,6 +60,7 @@ type
     procedure actPlayExecute(Sender: TObject);
     procedure spLeftMoved(Sender: TObject);
     procedure CursorUpdate(Sender: TObject);
+    procedure UpdateTime(Time: Cardinal);
   private
     SplineImages: array of TImage;
     FBuffer: TBitmap;
@@ -83,12 +83,13 @@ uses
   DialogAddFrame;
 
 var
-  isPlay, IsDragging, IsAddKeyFrame: Boolean;
+  isPlay, IsDragging, IsAddKeyFrame,isCursorDrag: Boolean;
   DragOffset: TPoint;
   LoadObjs: TLoadObjs;
   SelectedObj: PSceneObj;
   SceneObjs: PSceneObj;
   TimeCursor, StartTime, EndTime: Cardinal;
+  
   TimeLinemain: TTimeline;
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -113,10 +114,10 @@ begin
   FBuffer.Canvas.Brush.Color := clWhite;
   FBuffer.Canvas.FillRect(Rect(0, 0, FBuffer.Width, FBuffer.Height));
 
-  TimeLinemain := TTimeline.Create(ScrollBox1, SceneObjs);
-  TimeLinemain.Parent := ScrollBox1;
-  TimeLinemain.Height := ScrollBox1.ClientHeight + 1;
-  TimeLinemain.Width := ScrollBox1.ClientWidth;
+  TimeLinemain := TTimeline.Create(TimeLine, SceneObjs);
+  TimeLinemain.Parent := TimeLine;
+  TimeLinemain.Height := TimeLine.ClientHeight + 1;
+  TimeLinemain.Width := TimeLine.ClientWidth;
   TimeLinemain.OnPositionChange := CursorUpdate;
 
 end;
@@ -125,7 +126,15 @@ procedure TMainForm.CursorUpdate(Sender: TObject);
 begin
   TimeCursor := (Sender as TTimeline).CurrentPosition;
   EditTime(TimeCursor,SceneObjs);
+  isCursorDrag := true;
   pbScene.Invalidate;
+end;
+
+procedure TMainForm.UpdateTime(Time: Cardinal);
+begin
+  TimeCursor := Time;
+  EditTime(Time,SceneObjs);
+  TimeLineMain.CurrentPosition := Time; 
 end;
 
 procedure TMainForm.FormShow(Sender: TObject);
@@ -133,7 +142,7 @@ var
   i: Integer;
   Obj: TArray<String>;
 begin
-
+  
   Obj := LoadObjs.Keys.ToArray;
   for i := Low(Obj) to High(Obj) do
   begin
@@ -229,6 +238,7 @@ var
   Modal: TAddFrame;
   delTime: Cardinal;
   isMirror: Boolean;
+  Temp : PSceneKeyFrame;
   Anim: String;
 begin
   if IsAddKeyFrame then
@@ -237,11 +247,11 @@ begin
     if SelectedObj <> nil then
     begin
       With SelectedObj^ do
-        if KeyFrames = nil then
+        if KeyFrames.Next = KeyFrames.Prev then
         begin
           isMirror := false;
           delTime :=
-            Round(Sqrt(Sqr(StartPoint.X - CurPoint.X) + Sqr(StartPoint.Y -
+            Round(Sqrt(Sqr(KeyFrames.Inf.EndPoint.X - CurPoint.X) + Sqr(KeyFrames.Inf.EndPoint.Y -
             CurPoint.Y))) * 10;
         end
         else
@@ -256,14 +266,16 @@ begin
         end;
 
       AddFrame.SetParams(delTime, SelectedObj^.Obj.Animations, isMirror);
+      if (SelectedObj^.KeyFrames <> nil) and (SelectedObj^.KeyFrames^.Next <> nil) then
+          AddFrame.SetMaxTime(SelectedObj^.KeyFrames^.Next.Inf.StartTime);
       if AddFrame.ShowModal = mrOk then
       begin
         AddFrame.GetParams(delTime, Anim, isMirror);
         AddKeyFrame(SelectedObj, SelectedObj.CurPoint, SelectedObj.BaseHeight,
           isMirror, Anim, TimeCursor, TimeCursor + delTime);
-        TimeCursor := TimeCursor + delTime + 1;
-        TimeLinemain.CurrentPosition := TimeCursor;
-        EditTime(TimeCursor, SceneObjs);
+
+        
+        UpdateTime(TimeCursor + delTime + 1);
       end;
       pbScene.Invalidate;
     end;
@@ -271,6 +283,15 @@ begin
   else
   begin
     IsAddKeyFrame := True;
+    if SelectedObj <> nil then
+    begin
+      With SelectedObj^ do
+        if KeyFrames^.Inf.EndTime > TimeCursor then
+          begin
+            TimeCursor := KeyFrames.Inf.EndTime;
+            TimeLinemain.CurrentPosition := TimeCursor;
+          end;
+    end;
   end;
 end;
 
@@ -279,14 +300,16 @@ var
   Temp: PSceneObj;
   KTemp: PSceneKeyFrame;
 begin
-  TimeCursor := 0;
+  UpdateTime(0);
   StartTime := GetTickCount;
   isPlay := True;
   pbScene.Invalidate;
   Temp := SceneObjs^.Next;
   while Temp <> nil do
   begin
+
     KTemp := Temp.KeyFrames;
+    Temp.CurPoint := KTemp.Inf.EndPoint;
     while KTemp <> nil do
     begin
       if KTemp^.Inf.EndTime > EndTime then
@@ -324,8 +347,7 @@ begin
           Temp^.CurPoint := Lerp(Temp^.KeyFrames^.Prev^.Inf.EndPoint, EndPoint,
             TimeCursor, StartTime, EndTime)
         else
-          Temp^.CurPoint := Lerp(Temp^.StartPoint, EndPoint, TimeCursor,
-            StartTime, EndTime);
+          Temp^.CurPoint := Temp^.KeyFrames.Inf.EndPoint;
 
         with Temp^.Obj.MainImage, Temp^.KeyFrames^.Inf do
         begin
@@ -337,13 +359,14 @@ begin
       end
       else
       begin
-        if Temp^.Obj^.Animations.ContainsKey('idle.png') then
+        if Temp^.Obj^.Animations.ContainsKey('idle.png') and (IsPlay or isCursorDrag) then
         begin
+          isCursorDrag := false;
           Clip.Assign(GetAnimation(Temp^.Obj, 'idle.png'));
           Cadr := (TimeCursor div 150) mod (Clip.Width div Clip.Height);
           with Temp^.Obj.MainImage do
           begin
-            Clip.Scanline[0];
+            //Clip.Scanline[0];
 
             // var TempBmp: TBitmap := TBitmap.Create;
             // TempBmp.PixelFormat := pf32bit;
@@ -362,14 +385,16 @@ begin
             // Card.Canvas.Pie(0,0,144,144,0,0,0,0); //CopyRect(Card.Canvas.ClipRect,Clip.Canvas,Rect(Width * (Cadr), 0, Width * (Cadr + 1), Height));
             // Card.SaveToFile('Test.png');
             // Clip.DrawUsingPixelInformation(pbScene.Canvas, Point(Temp^.CurPoint.X + Width,Temp^.CurPoint.Y + Height));
-            pbScene.Canvas.CopyRect(Rect(Temp^.CurPoint,
-              Point(Temp^.CurPoint.X + Width, Temp^.CurPoint.Y + Height)),
+            Temp^.CurPoint := Temp^.KeyFrames^.Inf.EndPoint;
+            with Temp^.KeyFrames^.Inf do
+            pbScene.Canvas.CopyRect(Rect(EndPoint,
+              Point(EndPoint.X + Width, EndPoint.Y + Height)),
               Clip.Canvas, Rect(Width * (Cadr), 0, Width * (Cadr + 1), Height));
           end;
         end
         else
         begin
-          Clip := Temp^.Obj^.MainImage;
+          Clip.Assign(Temp^.Obj^.MainImage);
           pbScene.Canvas.Draw(Temp^.CurPoint.X, Temp^.CurPoint.Y, Clip);
         end;
       end;
@@ -385,6 +410,7 @@ begin
   if IsDragging then
   begin
     IsDragging := false;
+
   end;
 
 end;
@@ -405,13 +431,13 @@ begin
         CurPoint.X + Obj.MainImage.Width, CurPoint.Y + Obj.MainImage.Height);
       if IsAddKeyFrame then
       begin
-        if KeyFrames <> nil then
+        //if KeyFrames <> nil then
           with KeyFrames^.Inf.EndPoint do
             pbScene.Canvas.MoveTo(X + Obj.MainImage.Width div 2,
-              Y + Obj.MainImage.Height div 2)
-        else
-          pbScene.Canvas.MoveTo(StartPoint.X + Obj.MainImage.Width div 2,
-            StartPoint.Y + Obj.MainImage.Height div 2);
+              Y + Obj.MainImage.Height div 2);
+        //else
+        //  pbScene.Canvas.MoveTo(StartPoint.X + Obj.MainImage.Width div 2,
+        //    StartPoint.Y + Obj.MainImage.Height div 2);
         pbScene.Canvas.LineTo(CurPoint.X + Obj.MainImage.Width div 2,
           CurPoint.Y + Obj.MainImage.Height div 2);
       end;
@@ -487,6 +513,7 @@ begin
       end;
 
   end;
+
 end;
 
 procedure TMainForm.SceneRender(Sender: TObject);
@@ -514,6 +541,7 @@ procedure TMainForm.spLeftMoved(Sender: TObject);
 begin
   pbScene.Invalidate;
   Loaded.Invalidate;
+  TimeLineMain.Height := Max(TimeLineMain.Height, TimeLine.ClientHeight)
 end;
 
 end.
