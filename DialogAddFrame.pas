@@ -61,6 +61,7 @@ begin
   seTime.Value := Time / 1000;
   cbIsMirror.Checked := isMirror;
   cbAnim.Items.Clear;
+  cbAnim.Text := '';
   for Anim in Anims.Keys.ToArray do
   begin
     if Anim = 'idle.png' then
