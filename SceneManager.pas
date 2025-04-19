@@ -120,11 +120,11 @@ begin
   Temp := Obj^.Next;
   while (Temp <> nil) and (Temp^.KeyFrames <> nil) do
   begin
-    while (Temp^.KeyFrames^.Next <> nil) and (Temp^.KeyFrames.Inf.EndTime < NewTime) do
+    while (Temp^.KeyFrames^.Next <> nil) and (Temp^.KeyFrames.Inf.EndTime <= NewTime) do
     begin
       Temp^.KeyFrames := Temp^.KeyFrames^.Next;
     end;
-    while (Temp^.KeyFrames^.Prev <> nil) and (Temp^.KeyFrames^.Inf.StartTime > NewTime) do
+    while (Temp^.KeyFrames^.Prev <> nil) and (Temp^.KeyFrames^.Inf.StartTime >= NewTime) do
     begin
       Temp^.KeyFrames := Temp^.KeyFrames^.Prev;
     end;

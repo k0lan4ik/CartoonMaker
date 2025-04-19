@@ -56,11 +56,15 @@ type
       X, Y: Integer);
     procedure pbSceneMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure pbSceneMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure actAddKeyFrameExecute(Sender: TObject);
     procedure actPlayExecute(Sender: TObject);
     procedure spLeftMoved(Sender: TObject);
     procedure CursorUpdate(Sender: TObject);
     procedure UpdateTime(Time: Cardinal);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     SplineImages: array of TImage;
     FBuffer: TBitmap;
@@ -82,13 +86,19 @@ implementation
 uses
   DialogAddFrame;
 
+const
+  STANDARTSCENE_X = 1920;
+  STANDARTSCENE_y = 1080;
+
 var
-  isPlay, IsDragging, IsAddKeyFrame, isCursorDrag: Boolean;
+  isPlay, IsDragging, IsAddKeyFrame, isCursorDrag, isSceneMove: Boolean;
   DragOffset: TPoint;
   LoadObjs: TLoadObjs;
   SelectedObj: PSceneObj;
   SceneObjs: PSceneObj;
   TimeCursor, StartTime, EndTime: Cardinal;
+  ScaleScreene, ShiftScreenX, ShiftScreenY: Real;
+  OldX, OldY: Integer;
 
   TimeLinemain: TTimeline;
 
@@ -106,20 +116,33 @@ begin
   IsDragging := false;
   Loaded.DoubleBuffered := True;
   DoubleBuffered := True;
+
+  ScaleScreene := Min(pbScene.Height / STANDARTSCENE_y,
+    pbScene.Width / STANDARTSCENE_X) * 1.5;
+  ShiftScreenX := 0.25;
+  ShiftScreenY := 0.25;
   FBuffer := TBitmap.Create;
   FBuffer.Width := pbScene.Width;
   FBuffer.Height := pbScene.Height;
-  FBuffer.PixelFormat := pf32bit;
-
-  FBuffer.Canvas.Brush.Color := clWhite;
-  FBuffer.Canvas.FillRect(Rect(0, 0, FBuffer.Width, FBuffer.Height));
+  FBuffer.PixelFormat := pf8bit;
 
   TimeLinemain := TTimeline.Create(TimeLine, SceneObjs);
   TimeLinemain.Parent := TimeLine;
   TimeLinemain.Height := TimeLine.ClientHeight + 1;
   TimeLinemain.Width := TimeLine.ClientWidth;
+  TimeLinemain.Align := alClient;
   TimeLinemain.OnPositionChange := CursorUpdate;
 
+end;
+
+procedure TMainForm.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var
+  SceneMousePos: TPoint;
+begin
+  SceneMousePos := pbScene.ScreenToClient(Mouse.CursorPos);
+  if PtInRect(pbScene.ClientRect, SceneMousePos) then
+    pbSceneMouseWheel(Sender, Shift, WheelDelta, SceneMousePos, Handled);
 end;
 
 procedure TMainForm.CursorUpdate(Sender: TObject);
@@ -142,7 +165,6 @@ var
   i: Integer;
   Obj: TArray<String>;
 begin
-
   Obj := LoadObjs.Keys.ToArray;
   for i := Low(Obj) to High(Obj) do
   begin
@@ -329,7 +351,8 @@ begin
   Result.rgbtRed := Color and $FF;
 end;
 
-procedure CopyPNGTo(var SrcPng, DestPng: TPngImage; const SourceRect: TRect; isMirror: Boolean);
+procedure CopyPNGTo(var SrcPng, DestPng: TPngImage; const SourceRect: TRect;
+  isMirror: Boolean);
 var
   X, Y, ImageX, ImageY, OffsetX, OffsetY: Integer;
   Width, Height: Integer;
@@ -354,9 +377,12 @@ begin
       BitmapLine := Bitmap.Scanline[Y];
       for X := 0 to Bitmap.Width - 1 do
         if isMirror then
-          BitmapLine[X] := ColorToTriple(SrcPng.Pixels[OffsetX + Bitmap.Width - 1 - X, Y + OffsetY])
+          BitmapLine[X] :=
+            ColorToTriple(SrcPng.Pixels[OffsetX + Bitmap.Width - 1 - X,
+            Y + OffsetY])
         else
-          BitmapLine[X] := ColorToTriple(SrcPng.Pixels[X + OffsetX, Y + OffsetY]);
+          BitmapLine[X] := ColorToTriple(SrcPng.Pixels[X + OffsetX,
+            Y + OffsetY]);
     end;
 
     DestPng := TPngImage.Create;
@@ -389,10 +415,27 @@ var
   Clip: TPngImage;
   Cadr: Integer;
   Card: TPngImage;
+  VW, VH, ShiftX, ShiftY:Integer;
 begin
-  FBuffer.Width := pbScene.Width;
-  FBuffer.Height := pbScene.Height;
-  FBuffer.PixelFormat := pf32bit;
+  FBuffer.Width := pbScene.Width; //
+  VW := Round(STANDARTSCENE_X * ScaleScreene);
+  FBuffer.Height := pbScene.Height; //
+  VH := Round(STANDARTSCENE_y * ScaleScreene);
+
+  ShiftX  := Round(FBuffer.Width * ShiftScreenX);
+  ShiftY  := Round(FBuffer.Height * ShiftScreenY);
+  // FBuffer.PixelFormat := pf32bit;
+  With FBuffer.Canvas do
+  begin
+    Brush.Color := clSilver;
+    FillRect(ClipRect);
+    Brush.Color := clWhite;
+    FillRect(Rect(VW div 4 - ShiftX,
+      VH div 4 - ShiftY,
+      VW - VW div 4 - ShiftX,
+      VH - VH div 4- ShiftY));
+  end;
+
   Clip := TPngImage.Create;
   Temp := SceneObjs^.Next;
   While Temp <> nil do
@@ -411,15 +454,13 @@ begin
 
         with Temp^.Obj.MainImage, Temp^.KeyFrames^.Inf do
         begin
-          CopyPNGTo(Clip, Card, Rect(Width * (Cadr), 0,
-              Width * (Cadr + 1), Temp^.Obj.MainImage.Height),isMirror);
-          Card.SaveToFile('Test.png');
-          pbScene.Canvas.Draw(Temp^.CurPoint.X, Temp^.CurPoint.Y, Card);
-            Card.Free;
-          {pbScene.Canvas.CopyRect(Rect(Temp^.CurPoint,
-            Point(Temp^.CurPoint.X + Width, Temp^.CurPoint.Y + Height)),
-            Clip.Canvas, Rect(Width * (Cadr + Integer(isMirror)), 0,
-            Width * (Cadr + Integer(not isMirror)), Height)); }
+          CopyPNGTo(Clip, Card, Rect(Width * (Cadr), 0, Width * (Cadr + 1),
+            Temp^.Obj.MainImage.Height), isMirror);
+          With Temp^.CurPoint do
+            FBuffer.Canvas.StretchDraw(Rect(Round(X * ScaleScreene) - ShiftX,
+              Round(Y * ScaleScreene) - ShiftY, Round((X + Card.Width) * ScaleScreene - ShiftX),
+              Round((Y + Card.Height) * ScaleScreene) - ShiftY), Card);
+          Card.Free;
         end;
       end
       else
@@ -432,46 +473,55 @@ begin
           Cadr := (TimeCursor div 150) mod (Clip.Width div Clip.Height);
           with Temp^.Obj.MainImage do
           begin
-            // Clip.Scanline[0];
-            CopyPNGTo(Clip, Card, Rect(Width * (Cadr), 0,
-              Width * (Cadr + 1), Height),false);
-            // var TempBmp: TBitmap := TBitmap.Create;
-            // TempBmp.PixelFormat := pf32bit;
-            // TempBmp.AlphaFormat := afDefined;
-            // TempBmp.TransparentMode := tmAuto;
-            // TempBmp.Transparent := true;
-            // TempBmp.SetSize(144, 144);
-            // TempBmp.Canvas.Draw(0, 0, Clip);
-            //Card := TPngImage.CreateBlank(COLOR_RGBALPHA, 16, 144, 144);
-            // Card.CreateAlpha;
-            // Card.Assign(TempBmp);
-            //
-            //Card.SaveToFile('Test.png');
-            // Card := TPngImage.CreateBlank(COLOR_RGBALPHA,16,Width,Height);
-            // Card.EnableScaledDrawer(TWICScaledGraphicDrawer);
-            // Clip.Draw(Card.Canvas, Rect(Width * (Cadr), 0, Width * (Cadr + 1), Height));
-            // Card.Canvas.Pie(0,0,144,144,0,0,0,0); //CopyRect(Card.Canvas.ClipRect,Clip.Canvas,Rect(Width * (Cadr), 0, Width * (Cadr + 1), Height));
-            // Card.SaveToFile('Test.png');
-            // Clip.DrawUsingPixelInformation(pbScene.Canvas, Point(Temp^.CurPoint.X + Width,Temp^.CurPoint.Y + Height));
+            CopyPNGTo(Clip, Card, Rect(Width * (Cadr), 0, Width * (Cadr + 1),
+              Height), false);
             Temp^.CurPoint := Temp^.KeyFrames^.Inf.EndPoint;
-            pbScene.Canvas.Draw(Temp^.CurPoint.X, Temp^.CurPoint.Y, Card);
-              Card.Free;
-            { with Temp^.KeyFrames^.Inf do
-              pbScene.Canvas.CopyRect(Rect(EndPoint,
-              Point(EndPoint.X + Width, EndPoint.Y + Height)),
-              Clip.Canvas, Rect(Width * (Cadr), 0, Width * (Cadr + 1), Height)); }
+            With Temp^.CurPoint do
+              FBuffer.Canvas.StretchDraw(Rect(Round(X * ScaleScreene) - ShiftX,
+                Round(Y * ScaleScreene) - ShiftY, Round((X + Card.Width) * ScaleScreene) - ShiftX,
+                Round((Y + Card.Height) * ScaleScreene) - ShiftY) , Card);
+            Card.Free;
           end;
         end
         else
         begin
           Clip.Assign(Temp^.Obj^.MainImage);
-          pbScene.Canvas.Draw(Temp^.CurPoint.X, Temp^.CurPoint.Y, Clip);
+          With Temp^.CurPoint do
+            FBuffer.Canvas.StretchDraw(Rect(Round(X * ScaleScreene)- ShiftX,
+              Round(Y * ScaleScreene)-ShiftY, Round((X + Clip.Width) * ScaleScreene)-ShiftX,
+              Round((Y + Clip.Height) * ScaleScreene)- ShiftY), Clip);
         end;
       end;
 
     Temp := Temp^.Next;
   end;
   Clip.Free;
+
+  if not isPlay and (SelectedObj <> nil) then
+  begin
+    with SelectedObj^, FBuffer.Canvas, CurPoint do
+    begin
+      Pen.Color := clBlue;
+      Brush.Style := bsClear;
+
+      Rectangle(Round(X * ScaleScreene)-ShiftX, Round(Y * ScaleScreene)- ShiftY,
+        Round((X + Obj.MainImage.Width) * ScaleScreene)-ShiftX,
+        Round((Y + Obj.MainImage.Height) * ScaleScreene)- ShiftY);
+      if IsAddKeyFrame then
+      begin
+        // if KeyFrames <> nil then
+        with KeyFrames^.Inf.EndPoint do
+          MoveTo(Round((X + Obj.MainImage.Width div 2) * ScaleScreene) - ShiftX,
+            Round((Y + Obj.MainImage.Height div 2) * ScaleScreene) - ShiftY);
+        // else
+        // pbScene.Canvas.MoveTo(StartPoint.X + Obj.MainImage.Width div 2,
+        // StartPoint.Y + Obj.MainImage.Height div 2);
+        LineTo(Round((X + Obj.MainImage.Width div 2) * ScaleScreene) - ShiftX,
+          Round((Y + Obj.MainImage.Height div 2) * ScaleScreene) - ShiftY);
+      end;
+      Brush.Style := bsSolid;
+    end
+  end;
 
 end;
 
@@ -481,9 +531,13 @@ begin
   if IsDragging then
   begin
     IsDragging := false;
-
+    ClipCursor(nil);
+  end
+  else if isSceneMove then
+  begin
+    isSceneMove := false;
+    ClipCursor(nil);
   end;
-
 end;
 
 procedure TMainForm.pbSceneMouseMove(Sender: TObject; Shift: TShiftState;
@@ -491,100 +545,134 @@ procedure TMainForm.pbSceneMouseMove(Sender: TObject; Shift: TShiftState;
 begin
   if IsDragging then
   begin
-    SelectedObj^.CurPoint := Point(X - DragOffset.X, Y - DragOffset.Y);
-    pbScene.Refresh;
-    with SelectedObj^ do
-    begin
-      pbScene.Canvas.Pen.Color := clBlue;
-      pbScene.Canvas.Brush.Style := bsClear;
-
-      pbScene.Canvas.Rectangle(CurPoint.X, CurPoint.Y,
-        CurPoint.X + Obj.MainImage.Width, CurPoint.Y + Obj.MainImage.Height);
-      if IsAddKeyFrame then
-      begin
-        // if KeyFrames <> nil then
-        with KeyFrames^.Inf.EndPoint do
-          pbScene.Canvas.MoveTo(X + Obj.MainImage.Width div 2,
-            Y + Obj.MainImage.Height div 2);
-        // else
-        // pbScene.Canvas.MoveTo(StartPoint.X + Obj.MainImage.Width div 2,
-        // StartPoint.Y + Obj.MainImage.Height div 2);
-        pbScene.Canvas.LineTo(CurPoint.X + Obj.MainImage.Width div 2,
-          CurPoint.Y + Obj.MainImage.Height div 2);
-      end;
-      pbScene.Canvas.Brush.Style := bsSolid;
-    end
+    SelectedObj^.CurPoint := Point(Round(X / ScaleScreene - DragOffset.X),
+      Round(Y / ScaleScreene - DragOffset.Y));
+    pbScene.Invalidate;
+  end
+  else if isSceneMove then
+  begin
+    ShiftScreenX := EnsureRange(ShiftScreenX + (OldX - X) / pbScene.Width, 0,
+      ScaleScreene * STANDARTSCENE_X / pbScene.Width - 1);;
+    ShiftScreenY := EnsureRange(ShiftScreenY + (OldY - Y) / pbScene.Height, 0,
+      ScaleScreene * STANDARTSCENE_y / pbScene.Height - 1);;
+    OldX := X;
+    OldY := Y;
+    pbScene.Invalidate;
   end;
 end;
 
 procedure TMainForm.pbSceneMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
+  TX, TY: Integer;
   Temp: PSceneObj;
   NameObj: String;
   Find: Boolean;
+  TempRect: TRect;
 begin
-  if Loaded.ItemIndex <> -1 then
+  if Button = mbLeft then
   begin
-    NameObj := Loaded.Items[Loaded.ItemIndex];
-    AddSceneObj(SceneObjs, Point(X - LoadObjs[NameObj].MainImage.Width div 2,
-      Y - LoadObjs[NameObj].MainImage.Height div 2), 200,
-      LoadObjs[NameObj], NameObj);
-    Loaded.ItemIndex := -1;
-    pbScene.Invalidate;
-    TimeLinemain.Invalidate;
-  end
-  else if not isPlay then
-  begin
-    pbScene.Refresh;
-    Find := false;
-    if SelectedObj = nil then
+    TX := Trunc(X / ScaleScreene + pbScene.Width * ShiftScreenX / ScaleScreene);
+    TY := Trunc(Y / ScaleScreene + pbScene.Height * ShiftScreenY / ScaleScreene);
+    if Loaded.ItemIndex <> -1 then
     begin
-      Temp := SceneObjs^.Next;
-
-      while Temp <> nil do
-      begin
-        with Temp^ do
-          if ((X > CurPoint.X) and (Y > CurPoint.Y)) and
-            ((X < CurPoint.X + Obj.MainImage.Width) and
-            (Y < CurPoint.Y + Obj.MainImage.Height)) then
-          begin
-            SelectedObj := Temp;
-            Find := True;
-          end;
-        Temp := Temp^.Next;
-      end;
+      NameObj := Loaded.Items[Loaded.ItemIndex];
+      AddSceneObj(SceneObjs, Point(TX - LoadObjs[NameObj].MainImage.Width div 2,
+        TY - LoadObjs[NameObj].MainImage.Height div 2), 200,
+        LoadObjs[NameObj], NameObj);
+      Loaded.ItemIndex := -1;
+      pbScene.Invalidate;
+      TimeLinemain.Invalidate;
     end
-    else
+    else if not isPlay then
     begin
-      with SelectedObj^ do
-        if ((X > CurPoint.X) and (Y > CurPoint.Y)) and
-          ((X < CurPoint.X + Obj.MainImage.Width) and
-          (Y < CurPoint.Y + Obj.MainImage.Height)) then
-        begin
-          DragOffset := Point(X - CurPoint.X, Y - CurPoint.Y);
-          IsDragging := True;
-          Find := True;
-        end;
-    end;
-    with SelectedObj^, pbScene.Canvas do
-      if Find then
+      pbScene.Invalidate;
+      Find := false;
+      if SelectedObj = nil then
       begin
-        Pen.Color := clBlue;
-        Brush.Style := bsClear;
+        Temp := SceneObjs^.Next;
 
-        Rectangle(CurPoint.X, CurPoint.Y, CurPoint.X + Obj.MainImage.Width,
-          CurPoint.Y + Obj.MainImage.Height);
-
-        Brush.Style := bsSolid;
+        while Temp <> nil do
+        begin
+          with Temp^ do
+            if ((TX > CurPoint.X) and (TY > CurPoint.Y)) and
+              ((TX < CurPoint.X + Obj.MainImage.Width) and
+              (TY < CurPoint.Y + Obj.MainImage.Height)) then
+            begin
+              SelectedObj := Temp;
+              Find := True;
+            end;
+          Temp := Temp^.Next;
+        end;
       end
       else
       begin
-        SelectedObj := nil;
+        with SelectedObj^ do
+          if ((TX > CurPoint.X) and (TY > CurPoint.Y)) and
+            ((TX < CurPoint.X + Obj.MainImage.Width) and
+            (TY < CurPoint.Y + Obj.MainImage.Height)) then
+          begin
+            DragOffset := Point(Round(X / ScaleScreene - CurPoint.X),
+              Round(Y / ScaleScreene - CurPoint.Y));
+            IsDragging := True;
+            Find := True;
+            TempRect := (Sender as TControl).ClientToScreen((Sender as TControl).ClientRect);
+            ClipCursor( @TempRect);
+          end;
       end;
+      with SelectedObj^, pbScene.Canvas do
+        if not Find then
+        begin
+          SelectedObj := nil;
+        end;
 
+    end;
+  end
+  else if Button = mbMiddle then
+  begin
+    isSceneMove := True;
+
+    TempRect := (Sender as TControl).ClientToScreen((Sender as TControl).ClientRect);
+    ClipCursor( @TempRect);
+
+    OldX := X;
+    OldY := Y;
   end;
 
+end;
+
+procedure TMainForm.pbSceneMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+const
+  ZOOM_FACTOR = 1.1;
+  MAX_SCALE = 25.0;
+var
+  OldScale: Double;
+  MouseX, MouseY: Double;
+  NewShiftX, NewShiftY: Double;
+begin
+  Handled := True;
+
+  MouseX := (MousePos.X + ShiftScreenX * pbScene.Width) / ScaleScreene;
+  MouseY := (MousePos.Y + ShiftScreenY * pbScene.Height) / ScaleScreene;
+
+  OldScale := ScaleScreene;
+
+  if WheelDelta > 0 then
+    ScaleScreene := ScaleScreene * ZOOM_FACTOR
+  else
+    ScaleScreene := ScaleScreene / ZOOM_FACTOR;
+
+  ScaleScreene := EnsureRange(ScaleScreene,
+    Max(pbScene.Height / STANDARTSCENE_y, pbScene.Width / STANDARTSCENE_X),
+    MAX_SCALE);
+
+  ShiftScreenX := EnsureRange((MouseX * ScaleScreene - MousePos.X) /
+    pbScene.Width, 0, ScaleScreene * STANDARTSCENE_X / pbScene.Width - 1);
+  ShiftScreenY := EnsureRange((MouseY * ScaleScreene - MousePos.Y) /
+    pbScene.Height, 0, ScaleScreene * STANDARTSCENE_y / pbScene.Height - 1);
+
+  pbScene.Invalidate;
 end;
 
 procedure TMainForm.SceneRender(Sender: TObject);
@@ -592,10 +680,9 @@ var
   Row: pRGBArray;
   X, Y: Integer;
 begin
-
+  DrawToBuffer;
   pbScene.Canvas.Draw(0, 0, FBuffer);
 
-  DrawToBuffer;
   if isPlay then
   begin
     TimeCursor := GetTickCount - StartTime;

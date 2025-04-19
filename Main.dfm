@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 409
   Top = 66
   Caption = 'CartoonMaker'
-  ClientHeight = 726
-  ClientWidth = 1091
+  ClientHeight = 746
+  ClientWidth = 1140
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,13 +13,14 @@ object MainForm: TMainForm
   Menu = MainMenu
   Position = poDesigned
   OnCreate = FormCreate
+  OnMouseWheel = FormMouseWheel
   OnShow = FormShow
   TextHeight = 15
   object pbScene: TPaintBox
     Left = 180
     Top = 40
-    Width = 911
-    Height = 520
+    Width = 960
+    Height = 540
     Align = alClient
     Color = clBtnFace
     ParentColor = False
@@ -27,15 +28,13 @@ object MainForm: TMainForm
     OnMouseMove = pbSceneMouseMove
     OnMouseUp = pbSceneMouseUp
     OnPaint = SceneRender
-    ExplicitLeft = 208
-    ExplicitTop = 39
-    ExplicitWidth = 881
-    ExplicitHeight = 530
+    ExplicitWidth = 1280
+    ExplicitHeight = 520
   end
   object spLeft: TSplitter
     Left = 177
     Top = 40
-    Height = 520
+    Height = 540
     OnMoved = spLeftMoved
     ExplicitLeft = 201
     ExplicitTop = 312
@@ -43,8 +42,8 @@ object MainForm: TMainForm
   end
   object spBottop: TSplitter
     Left = 0
-    Top = 560
-    Width = 1091
+    Top = 580
+    Width = 1140
     Height = 3
     Cursor = crVSplit
     Align = alBottom
@@ -55,8 +54,8 @@ object MainForm: TMainForm
   end
   object Timeline: TPanel
     Left = 0
-    Top = 563
-    Width = 1091
+    Top = 583
+    Width = 1140
     Height = 163
     Align = alBottom
     TabOrder = 1
@@ -65,7 +64,7 @@ object MainForm: TMainForm
     Left = 0
     Top = 40
     Width = 177
-    Height = 520
+    Height = 540
     Style = lbOwnerDrawFixed
     Align = alLeft
     DoubleBuffered = False
@@ -83,7 +82,7 @@ object MainForm: TMainForm
   object ToolBar: TToolBar
     Left = 0
     Top = 0
-    Width = 1091
+    Width = 1140
     Height = 40
     ButtonHeight = 40
     ButtonWidth = 39
