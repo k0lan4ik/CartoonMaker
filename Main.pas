@@ -45,6 +45,9 @@ type
     N7: TMenuItem;
     spLeft: TSplitter;
     spBottop: TSplitter;
+    tbPauseAnim: TToolButton;
+    actPause: TAction;
+    N8: TMenuItem;
     procedure SceneRender(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LoadedDrawItem(Control: TWinControl; Index: Integer; Rect: TRect;
@@ -65,6 +68,7 @@ type
     procedure UpdateTime(Time: Cardinal);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure actPauseExecute(Sender: TObject);
   private
     SplineImages: array of TImage;
     FBuffer: TBitmap;
@@ -89,6 +93,7 @@ uses
 const
   STANDARTSCENE_X = 1920;
   STANDARTSCENE_y = 1080;
+  BUFF_TIME = 30000;
 
 var
   isPlay, IsDragging, IsAddKeyFrame, isCursorDrag, isSceneMove: Boolean;
@@ -132,7 +137,7 @@ begin
   TimeLinemain.Width := TimeLine.ClientWidth;
   TimeLinemain.Align := alClient;
   TimeLinemain.OnPositionChange := CursorUpdate;
-
+  TimeLinemain.EndTime := BUFF_TIME;
 end;
 
 procedure TMainForm.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -295,7 +300,7 @@ begin
         AddFrame.GetParams(delTime, Anim, isMirror);
         AddKeyFrame(SelectedObj, SelectedObj.CurPoint, SelectedObj.BaseHeight,
           isMirror, Anim, TimeCursor, TimeCursor + delTime);
-
+        TimeLinemain.EndTime := Max(BUFF_TIME + TimeCursor + delTime,  TimeLinemain.EndTime);
         UpdateTime(TimeCursor + delTime + 1);
       end;
       pbScene.Invalidate;
@@ -314,6 +319,11 @@ begin
         end;
     end;
   end;
+end;
+
+procedure TMainForm.actPauseExecute(Sender: TObject);
+begin
+    isPlay := false;
 end;
 
 procedure TMainForm.actPlayExecute(Sender: TObject);
@@ -582,6 +592,7 @@ begin
         LoadObjs[NameObj], NameObj);
       Loaded.ItemIndex := -1;
       pbScene.Invalidate;
+      TimeLineMain.AddObj;
       TimeLinemain.Invalidate;
     end
     else if not isPlay then
