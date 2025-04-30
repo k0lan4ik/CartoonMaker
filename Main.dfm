@@ -66,6 +66,8 @@ object MainForm: TMainForm
     Height = 160
     Align = alBottom
     TabOrder = 1
+    ExplicitTop = 272
+    ExplicitWidth = 642
   end
   object Loaded: TListBox
     Left = 0
@@ -85,6 +87,7 @@ object MainForm: TMainForm
     ParentFont = False
     TabOrder = 2
     OnDrawItem = LoadedDrawItem
+    ExplicitHeight = 229
   end
   object ToolBar: TToolBar
     Left = 0
@@ -100,6 +103,7 @@ object MainForm: TMainForm
     ShowHint = True
     TabOrder = 0
     Transparent = False
+    ExplicitWidth = 642
     object tbFileNew: TToolButton
       Left = 0
       Top = 0

@@ -150,24 +150,29 @@ function GetFrameByTime(Time: Cardinal; Obj: PSceneObj): PSceneKeyFrame;
 var
   Selected: Boolean;
 begin
-  Result := Obj.KeyFrames;
-  Selected := false;
-  While (Result <> nil) and not Selected do
+  if Obj <> nil then
   begin
-    with Result^.Inf, Result^ do
+    Result := Obj.KeyFrames;
+    Selected := false;
+    While (Result <> nil) and not Selected do
     begin
-      if (StartTime <= Time) and (EndTime >= Time) then
-        Selected := True
-      else if (StartTime >= Time) and
-        ((Prev <> nil) and (Prev.Inf.EndTime >= Time)) then
-        Result := Prev
-      else if (EndTime <= Time) and
-        ((Next <> nil) and (Next.Inf.StartTime <= Time)) then
-        Result := Next
-      else
-        Result := nil;
+      with Result^.Inf, Result^ do
+      begin
+        if (StartTime <= Time) and (EndTime >= Time) then
+          Selected := True
+        else if (StartTime >= Time) and
+          ((Prev <> nil) and (Prev.Inf.EndTime >= Time)) then
+          Result := Prev
+        else if (EndTime <= Time) and
+          ((Next <> nil) and (Next.Inf.StartTime <= Time)) then
+          Result := Next
+        else
+          Result := nil;
+      end;
     end;
-  end;
+  end
+  else
+    Result := nil;
 end;
 
 procedure FreeObject(var Obj: PSceneObj);

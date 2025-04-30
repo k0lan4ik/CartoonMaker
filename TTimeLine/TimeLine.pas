@@ -7,7 +7,10 @@ uses
   SceneManager, Math, Vcl.StdCtrls, Vcl.Forms, Winapi.Messages;
 
 type
-  TCursorAction = (caDefault, caSizeble, caMove);
+  TCursorAction = (caDefault, caSizebleLeft, caSizebleRight, caMove);
+
+  TTimeEvent = procedure (Sender: TObject; Time: Cardinal; KeyFrame: PSceneKeyFrame) of object;
+  TTimeMoveEvent = procedure (Sender: TObject; Time, StartDelta: Cardinal; KeyFrame: PSceneKeyFrame) of object;
 
   TTimeline = class(TCustomControl)
   private
@@ -15,6 +18,9 @@ type
     FObjs: PSceneObj;
     FSelectedFrame: PSceneKeyFrame;
     FCursorAction: TCursorAction;
+    FStartDelta: Cardinal;
+    FIsAction: Boolean;
+    FSizebleWight: Integer;
 
     FHeightObj: Integer;
     FFramesColor: TColor;
@@ -41,9 +47,13 @@ type
 
     { События }
     FOnPositionChange: TNotifyEvent;
+    FOnKeyFrameMove: TTimeMoveEvent;
+    FOnKeyFrameSizebleRight: TTimeEvent;
+    FOnKeyFrameSizebleLeft: TTimeEvent;
 
     { Вспомогательные методы }
     procedure SetCurrentPos(const Value: Cardinal);
+    procedure SetCursorAction(const Value: TCursorAction);
 
   protected
     { Protected declarations }
@@ -82,10 +92,16 @@ type
     property EndTime: Cardinal read FEndTime write SetEndTime default 100;
     property CurrentPosition: Cardinal read FCurrentPos write SetCurrentPos
       default 0;
+    property CursorAction: TCursorAction read FCursorAction
+      write SetCursorAction default caDefault;
 
     { События }
     property OnPositionChange: TNotifyEvent read FOnPositionChange
       write FOnPositionChange;
+    property OnKeyFrameMove: TTimeMoveEvent read FOnKeyFrameMove write FOnKeyFrameMove;
+    property OnKeyFrameSizebleLeft: TTimeEvent read FOnKeyFrameSizebleLeft write FOnKeyFrameSizebleLeft;
+    property OnKeyFrameSizebleRight: TTimeEvent read FOnKeyFrameSizebleRight write FOnKeyFrameSizebleRight;
+
 
     { Наследуемые свойства }
     property Align;
@@ -150,6 +166,7 @@ begin
   FHeightObj := 40;
   FObjs := Objects;
   FSelectedFrame := nil;
+  FSizebleWight := 10;
 
   FMoveTimeCursor := false;
 
@@ -358,10 +375,10 @@ begin
       Key := Temp^.KeyFrames;
       while (Key <> nil) and (Key^.Prev <> nil) do
         Key := Key^.Prev;
-      Brush.Color := FFramesColor;
+      //Brush.Color := FFramesColor;
       while Key <> nil do
       begin
-
+         Brush.Color := FFramesColor;
         with Key^.Inf do
           if TimeToX(EndTime) > FObjectZoneWight then
           begin
@@ -440,6 +457,22 @@ begin
   end;
 end;
 
+procedure TTimeline.SetCursorAction(const Value: TCursorAction);
+begin
+  FCursorAction := Value;
+  case Value of
+    caDefault:
+      Screen.Cursor := crDefault;
+    caSizebleLeft:
+      Screen.Cursor := crSizeWE;
+    caSizebleRight:
+      Screen.Cursor := crSizeWE;
+    caMove:
+      Screen.Cursor := crSizeAll;
+  end;
+
+end;
+
 procedure TTimeline.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 var
@@ -472,8 +505,10 @@ begin
       if Temp <> nil then
         FSelectedFrame := GetFrameByTime(XToTime(X), Temp)
       else
-        FSelectedFrame := nil
-
+        FSelectedFrame := nil;
+      FIsAction := FSelectedFrame <> nil;
+      if FIsAction then
+        FStartDelta := XToTime(X) - FSelectedFrame.Inf.StartTime;
     end;
   end;
   Invalidate;
@@ -484,10 +519,16 @@ procedure TTimeline.MouseUp(Button: TMouseButton; Shift: TShiftState;
 begin
   if FMoveTimeCursor and (X < FObjectZoneWight) then
     CurrentPosition := 0;
+  CursorAction := caDefault;
   FMoveTimeCursor := false;
+  FIsAction := false;
 end;
 
 procedure TTimeline.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  Temp: PSceneObj;
+  TempFrame: PSceneKeyFrame;
+  Position, Index: Integer;
 begin
   inherited;
   if FMoveTimeCursor and (X > FObjectZoneWight) then
@@ -495,9 +536,44 @@ begin
     CurrentPosition := XToTime(X);
     if Assigned(FOnPositionChange) then
       FOnPositionChange(Self);
-  end;
+  end
+  else if (X > FObjectZoneWight) and (Y > FTimeRulerHeight) then
+  begin
+    Temp := FObjs^.Next;
+    Position := (Y - FTimeRulerHeight) div FHeightObj;
+    Index := 0;
+    While (Index < Position) and (Temp <> nil) do
+    begin
+      Temp := Temp.Next;
+      Inc(Index);
+    end;
+    if not FIsAction then
+    begin
+      TempFrame := GetFrameByTime(XToTime(X), Temp);
+      if TempFrame <> nil then
+      begin
+        with TempFrame^.Inf do
+          if ((X - TimeToX(StartTime)) < FSizebleWight) then
+            CursorAction := caSizebleLeft
+          else if ((TimeToX(EndTime) - X) < FSizebleWight) then
+            CursorAction := caSizebleRight
+          else
+            CursorAction := caMove
+      end
+      else
+        CursorAction := caDefault;
+    end
+    else
+    begin
+      case CursorAction of
+        caSizebleLeft: OnKeyFrameSizebleLeft(Self,XToTime(X),FSelectedFrame);
+        caSizebleRight: OnKeyFrameSizebleRight(Self,XToTime(X),FSelectedFrame);
+        caMove: OnKeyFrameMove(Self,XToTime(X), FStartDelta,FSelectedFrame);
+      end;
+      Invalidate;
+    end;
+  end
 
-  // if then
 
 end;
 

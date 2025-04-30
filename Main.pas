@@ -75,21 +75,31 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure pbSceneMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+
     procedure actAddKeyFrameExecute(Sender: TObject);
     procedure actPlayExecute(Sender: TObject);
-    procedure spLeftMoved(Sender: TObject);
-    procedure CursorUpdate(Sender: TObject);
-    procedure UpdateTime(Time: Cardinal);
-    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
-      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure actPauseExecute(Sender: TObject);
     procedure actFileSaveExecute(Sender: TObject);
     procedure actOpenFileExecute(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
     procedure actFileNewExecute(Sender: TObject);
     procedure actCangeBackGroundExecute(Sender: TObject);
     procedure actRenameObjExecute(Sender: TObject);
     procedure actDeleteObjExecute(Sender: TObject);
+
+    procedure spLeftMoved(Sender: TObject);
+
+    procedure CursorUpdate(Sender: TObject);
+    procedure KeyFrameSizebleLeft(Sender: TObject; Time: Cardinal;
+      KeyFrame: PSceneKeyFrame);
+    procedure KeyFrameSizebleRight(Sender: TObject; Time: Cardinal;
+      KeyFrame: PSceneKeyFrame);
+    procedure KeyFrameMove(Sender: TObject; Time, StartDelta: Cardinal;
+      KeyFrame: PSceneKeyFrame);
+
+    procedure UpdateTime(Time: Cardinal);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure FormDestroy(Sender: TObject);
     procedure ActionListMainUpdate(Action: TBasicAction; var Handled: Boolean);
   private
     SplineImages: array of TImage;
@@ -168,6 +178,9 @@ begin
   TimeLinemain.Width := TimeLine.ClientWidth;
   TimeLinemain.Align := alClient;
   TimeLinemain.OnPositionChange := CursorUpdate;
+  TimeLinemain.OnKeyFrameMove := KeyFrameMove;
+  TimeLinemain.OnKeyFrameSizebleLeft := KeyFrameSizebleLeft;
+  TimeLinemain.OnKeyFrameSizebleRight := KeyFrameSizebleRight;
   TimeLinemain.EndTime := BUFF_TIME;
 
   Obj := LoadObjs.Keys.ToArray;
@@ -201,6 +214,110 @@ begin
   EditTime(TimeCursor, SceneObjs);
   isCursorDrag := True;
   pbScene.Invalidate;
+end;
+
+procedure TMainForm.KeyFrameSizebleLeft(Sender: TObject; Time: Cardinal;
+  KeyFrame: PSceneKeyFrame);
+var
+  Delta: Cardinal;
+begin
+  Delta := 0;
+  if KeyFrame.Prev <> nil then
+    Delta := KeyFrame.Prev.Inf.EndTime;
+  with KeyFrame^.Inf do
+    if Time > Delta then
+    begin
+      if EndTime > Time + 100 then
+        StartTime := Time
+      else
+        StartTime := EndTime - 100;
+    end
+    else
+      StartTime := Delta;
+end;
+
+procedure TMainForm.KeyFrameSizebleRight(Sender: TObject; Time: Cardinal;
+  KeyFrame: PSceneKeyFrame);
+var
+  Delta: Cardinal;
+begin
+  Delta := BUFF_TIME + KeyFrame.Inf.EndTime;
+  if KeyFrame.Next <> nil then
+    Delta := KeyFrame.Next.Inf.StartTime;
+  with KeyFrame^.Inf do
+    if Time < Delta then
+    begin
+      if Time > StartTime + 100 then
+        EndTime := Time
+      else
+        EndTime := StartTime + 100;
+    end
+    else
+      EndTime := Delta;
+end;
+
+procedure TMainForm.KeyFrameMove(Sender: TObject; Time, StartDelta: Cardinal;
+  KeyFrame: PSceneKeyFrame);
+var
+  Delta, KeyTime: Cardinal;
+begin
+  Delta := StartDelta;
+  if KeyFrame.Prev <> nil then
+    Delta := KeyFrame.Prev.Inf.EndTime + Delta;
+
+  with KeyFrame.Inf, KeyFrame^ do
+  begin
+    KeyTime := EndTime - StartTime;
+    if (Delta < Time) then
+    begin
+      if (Next <> nil) and (Next.Inf.StartTime < Time + KeyTime - StartDelta)
+      then
+      begin
+        if (((Next^.Next <> nil) and (KeyTime >= Next.Next.Inf.StartTime -
+          Next.Inf.EndTime)) or (Next^.Next = nil)) and
+          ((Next.Inf.EndTime - Next.Inf.StartTime) div 2 + Next.Inf.StartTime <
+          Time) then
+        begin
+          StartTime := Next.Inf.EndTime;
+          EndTime := StartTime + KeyTime;
+          Next.Prev := Prev;
+          Prev.Next := Next;
+          Prev := Next;
+          if Next^.Next <> nil then
+            Next^.Next.Prev := KeyFrame;
+          Next := Next^.Next;
+          Prev.Next := KeyFrame;
+        end
+      end
+      else
+      begin
+        EndTime := Time + KeyTime - StartDelta;
+        StartTime := Time - StartDelta;
+      end;
+    end
+    else
+    begin
+      if (Prev <> nil) and (Prev.Inf.EndTime + StartDelta > Time ) then
+        if (((Prev^.Prev <> nil) and ((KeyTime <= Prev^.Inf.StartTime -
+          Prev^.Prev^.Inf.EndTime)))) then
+          if ((Prev^.Inf.EndTime - Prev^.Inf.StartTime) div 2 +
+            Prev^.Inf.StartTime > Time) then
+          begin
+            EndTime := Prev.Inf.StartTime;
+            StartTime := EndTime - KeyTime;
+            KeyFrame := KeyFrame.Prev;
+            KeyFrame.Next.Prev := KeyFrame.Prev;
+            KeyFrame.Prev.Next := KeyFrame.Next;
+            KeyFrame.Prev := KeyFrame.Next;
+            if KeyFrame.Next^.Next <> nil then
+              KeyFrame.Next^.Next.Prev := KeyFrame;
+            KeyFrame.Next := KeyFrame.Next^.Next;
+            KeyFrame.Prev.Next := KeyFrame;
+          end;
+
+    end;
+  end;
+
 end;
 
 procedure TMainForm.UpdateTime(Time: Cardinal);
@@ -763,7 +880,8 @@ begin
       end;
 
       with SelectedObj^ do
-        if (SelectedObj <> nil) and (((TX > CurPoint.X) and (TY > CurPoint.Y)) and
+        if (SelectedObj <> nil) and
+          (((TX > CurPoint.X) and (TY > CurPoint.Y)) and
           ((TX < CurPoint.X + Obj.MainImage.Width) and
           (TY < CurPoint.Y + Obj.MainImage.Height))) then
         begin

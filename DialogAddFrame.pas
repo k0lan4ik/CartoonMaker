@@ -40,6 +40,7 @@ implementation
 procedure TAddFrame.FormCreate(Sender: TObject);
 begin
   seTime.Increment := 0.01;
+  seTime.MinValue := 0.1
 end;
 
 procedure TAddFrame.seTimeChange(Sender: TObject);
