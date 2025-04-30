@@ -29,20 +29,22 @@ object AddFrame: TAddFrame
     Caption = #1042#1099#1073#1077#1088#1080#1090#1077' '#1076#1083#1080#1090#1077#1083#1100#1085#1086#1089#1090#1100
   end
   object btOk: TButton
-    Left = 160
+    Left = 16
     Top = 202
     Width = 75
     Height = 25
     Caption = 'OK'
+    Default = True
     ModalResult = 1
     TabOrder = 0
   end
   object btCancel: TButton
-    Left = 8
+    Left = 160
     Top = 202
     Width = 75
     Height = 25
-    Caption = 'Cancel'
+    Cancel = True
+    Caption = #1054#1090#1084#1077#1085#1072
     ModalResult = 2
     TabOrder = 1
   end
@@ -51,6 +53,7 @@ object AddFrame: TAddFrame
     Top = 40
     Width = 219
     Height = 23
+    Style = csDropDownList
     TabOrder = 2
   end
   object seTime: TSpinEdit

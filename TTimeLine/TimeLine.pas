@@ -7,11 +7,15 @@ uses
   SceneManager, Math, Vcl.StdCtrls, Vcl.Forms, Winapi.Messages;
 
 type
+  TCursorAction = (caDefault, caSizeble, caMove);
 
   TTimeline = class(TCustomControl)
   private
     { Private declarations }
     FObjs: PSceneObj;
+    FSelectedFrame: PSceneKeyFrame;
+    FCursorAction: TCursorAction;
+
     FHeightObj: Integer;
     FFramesColor: TColor;
 
@@ -69,7 +73,7 @@ type
     { Public declarations }
     constructor Create(AOwner: TComponent; Objects: PSceneObj);
     destructor Destroy; override;
-    procedure AddObj;
+    procedure AddInstance;
     // procedure UpdateScrollBars;
   published
     { Published declarations }
@@ -116,6 +120,7 @@ end;
 constructor TTimeline.Create(AOwner: TComponent; Objects: PSceneObj);
 begin
   inherited Create(AOwner);
+  DoubleBuffered := True;
   Parent := (AOwner as TWinControl);
   ControlStyle := ControlStyle + [csOpaque];
   DoubleBuffered := True;
@@ -144,6 +149,7 @@ begin
   FFramesColor := $FDFFC9;
   FHeightObj := 40;
   FObjs := Objects;
+  FSelectedFrame := nil;
 
   FMoveTimeCursor := false;
 
@@ -183,10 +189,9 @@ end;
 procedure TTimeline.SetEndTime(Time: Cardinal);
 begin
   FEndTime := Time;
-  UpdateScrollBars;
 end;
 
-procedure TTimeline.AddObj;
+procedure TTimeline.AddInstance;
 begin
   UpdateScrollBars;
 end;
@@ -363,10 +368,14 @@ begin
 
             R := Rect(Max(TimeToX(StartTime), FObjectZoneWight), TopNext,
               TimeToX(EndTime), TopNext + FHeightObj);
+
+            if FSelectedFrame = Key then
+              Brush.Color := FFramesColor and $FDF1F1;
             Rectangle(R);
             S := StringReplace(Key^.Inf.Animation, '.png', '', []);
             TextRect(R, S, [tfSingleLine, tfVerticalCenter, tfCenter,
               tfEndEllipsis]);
+
           end;
         Key := Key.Next;
 
@@ -384,7 +393,7 @@ var
   R: TRect;
   S: String;
 begin
-  inherited;
+
   with Canvas do
   begin
     { 1. Отрисовка фона }
@@ -418,6 +427,7 @@ begin
     end;
 
   end;
+  inherited;
 end;
 
 procedure TTimeline.SetCurrentPos(const Value: Cardinal);
@@ -432,11 +442,16 @@ end;
 
 procedure TTimeline.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
+var
+  Temp: PSceneObj;
+  Index, Position: Integer;
+  Time: Cardinal;
+  Selected: Boolean;
 begin
   inherited;
   if (Button = mbLeft) and ((X > FObjectZoneWight)) then
   begin
-    CurrentPosition := XToTime(X);
+    // CurrentPosition := XToTime(X);
     if Y < FTimeRulerHeight then
     begin
       CurrentPosition := XToTime(X);
@@ -446,15 +461,29 @@ begin
     end
     else
     begin
+      Temp := FObjs^.Next;
+      Position := (Y - FTimeRulerHeight) div FHeightObj;
+      Index := 0;
+      While (Index < Position) and (Temp <> nil) do
+      begin
+        Temp := Temp.Next;
+        Inc(Index);
+      end;
+      if Temp <> nil then
+        FSelectedFrame := GetFrameByTime(XToTime(X), Temp)
+      else
+        FSelectedFrame := nil
 
     end;
   end;
+  Invalidate;
 end;
 
 procedure TTimeline.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
-
+  if FMoveTimeCursor and (X < FObjectZoneWight) then
+    CurrentPosition := 0;
   FMoveTimeCursor := false;
 end;
 
@@ -463,12 +492,13 @@ begin
   inherited;
   if FMoveTimeCursor and (X > FObjectZoneWight) then
   begin
-
     CurrentPosition := XToTime(X);
-
     if Assigned(FOnPositionChange) then
       FOnPositionChange(Self);
   end;
+
+  // if then
+
 end;
 
 function TTimeline.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;

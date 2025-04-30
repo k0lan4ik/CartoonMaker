@@ -108,6 +108,11 @@
         </DCCReference>
         <DCCReference Include="CustomSpinEdit.pas"/>
         <DCCReference Include="TTimeLine\TimeLine.pas"/>
+        <DCCReference Include="FileWork.pas"/>
+        <DCCReference Include="DialogRenames.pas">
+            <Form>DialogRename</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

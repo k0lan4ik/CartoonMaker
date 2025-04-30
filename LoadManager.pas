@@ -15,6 +15,7 @@ type
   TLoadObjs = TDictionary<string,PLoadObj>;
 
 procedure LoadFile(var LoadObjs:TLoadObjs);
+procedure FreeLoadObjs(var LoadObjs: TLoadObjs);
 procedure SetLoadResurse(Road: String);
 function GetAnimation(LoadObj:PLoadObj; Animation: String):TPngImage;
 
@@ -70,6 +71,39 @@ begin
     end;
 
     LoadObjs.Add(DirObjs[i], TempObj);
+  end;
+end;
+
+procedure FreeLoadObjs(var LoadObjs: TLoadObjs);
+var
+  Pair: TPair<string, PLoadObj>;
+  AnimPair: TPair<string, TPngImage>;
+begin
+  if Assigned(LoadObjs) then
+  begin
+    for Pair in LoadObjs do
+    begin
+      if Assigned(Pair.Value) then
+      begin
+        if Assigned(Pair.Value^.Animations) then
+        begin
+          for AnimPair in Pair.Value^.Animations do
+          begin
+            if Assigned(AnimPair.Value) then
+              AnimPair.Value.Free;
+          end;
+          Pair.Value^.Animations.Free;
+        end;
+
+        if Assigned(Pair.Value^.MainImage) then
+          Pair.Value^.MainImage.Free;
+
+        Dispose(Pair.Value);
+      end;
+    end;
+
+    LoadObjs.Free;
+    LoadObjs := nil;
   end;
 end;
 

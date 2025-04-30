@@ -12,7 +12,9 @@ uses
   SceneManager in 'SceneManager.pas',
   DialogAddFrame in 'DialogAddFrame.pas' {AddFrame},
   CustomSpinEdit in 'CustomSpinEdit.pas',
-  TimeLine in 'TTimeLine\TimeLine.pas';
+  TimeLine in 'TTimeLine\TimeLine.pas',
+  FileWork in 'FileWork.pas',
+  DialogRenames in 'DialogRenames.pas' {DialogRename};
 
 {$R *.res}
 
@@ -21,5 +23,6 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TMainForm, MainForm);
   Application.CreateForm(TAddFrame, AddFrame);
+  Application.CreateForm(TDialogRename, DialogRename);
   Application.Run;
 end.
