@@ -15,7 +15,10 @@ const
   PixelCountMax = 32768;
 
 type
+  TProgressHand = function(Count:Integer):Boolean;
+
   TMainForm = class(TForm)
+
     TimeLine: TPanel;
     pbScene: TPaintBox;
     Loaded: TListBox;
@@ -63,6 +66,8 @@ type
     N13: TMenuItem;
     N14: TMenuItem;
     N15: TMenuItem;
+    actSaveAs: TAction;
+    N16: TMenuItem;
     procedure SceneRender(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure LoadedDrawItem(Control: TWinControl; Index: Integer; Rect: TRect;
@@ -96,16 +101,22 @@ type
     procedure KeyFrameMove(Sender: TObject; Time, StartDelta: Cardinal;
       KeyFrame: PSceneKeyFrame);
 
+    procedure MakeGIF(Road: String; Delay: Cardinal; PixelFormat: TPixelFormat; SizeX, SizeY: Integer; Progress:TProgressHand);
     procedure UpdateTime(Time: Cardinal);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure ActionListMainUpdate(Action: TBasicAction; var Handled: Boolean);
+    procedure actSaveAsExecute(Sender: TObject);
   private
+    ScaleScreene: Real;
+    ShiftScreenX: Real;
+    ShiftScreenY: Real;
     SplineImages: array of TImage;
     FBuffer: TBitmap;
     procedure LoadBackground(FileRoad: String);
-    procedure DrawToBuffer; // Рисуем линию в буфере
+    procedure DrawToBuffer(ScreenWidth: Integer = 0;ScreenHeight: Integer = 0);
+
   public
 
   end;
@@ -121,7 +132,7 @@ implementation
 {$R *.dfm}
 
 uses
-  DialogAddFrame, DialogRenames, FileWork;
+  DialogAddFrame, DialogRenames, FileWork, GifConvert;
 
 const
   STANDARTSCENE_X = 1920;
@@ -129,6 +140,7 @@ const
   BUFF_TIME = 30000;
   ZOOM_FACTOR = 1.1;
   MAX_SCALE = 15.0;
+  MAX_KEYFRAMETIME = 30000;
 
 var
   isPlay, IsDragging, IsAddKeyFrame, isCursorDrag, isSceneMove: Boolean;
@@ -137,7 +149,7 @@ var
   SelectedObj: PSceneObj;
   SceneObjs: PSceneObj;
   TimeCursor, StartTime, EndTime: Cardinal;
-  ScaleScreene, ShiftScreenX, ShiftScreenY: Real;
+
   OldX, OldY: Integer;
   RoadToBackGround: String;
   BackGround: TImage;
@@ -297,7 +309,7 @@ begin
     end
     else
     begin
-      if (Prev <> nil) and (Prev.Inf.EndTime + StartDelta > Time ) then
+      if (Prev <> nil) and (Prev.Inf.EndTime + StartDelta > Time) then
         if (((Prev^.Prev <> nil) and ((KeyTime <= Prev^.Inf.StartTime -
           Prev^.Prev^.Inf.EndTime)))) then
           if ((Prev^.Inf.EndTime - Prev^.Inf.StartTime) div 2 +
@@ -411,7 +423,7 @@ end;
 procedure TMainForm.actAddKeyFrameExecute(Sender: TObject);
 var
   Modal: TAddFrame;
-  delTime: Cardinal;
+  delTime, nextTime: Cardinal;
   isMirror: Boolean;
   Temp: PSceneKeyFrame;
   Anim: String;
@@ -438,8 +450,13 @@ begin
               CurPoint.Y))) * 10;
           end;
         end;
-
-      AddFrame.SetParams(delTime, SelectedObj^.Obj.Animations, isMirror);
+      if SelectedObj^.KeyFrames.Next <> nil then
+      begin
+        nextTime := SelectedObj^.KeyFrames.Next.Inf.StartTime - TimeCursor;
+      end
+      else
+        nextTime := MAX_KEYFRAMETIME;
+      AddFrame.SetParams(delTime,nextTime, SelectedObj^.Obj.Animations, isMirror);
       if (SelectedObj^.KeyFrames <> nil) and
         (SelectedObj^.KeyFrames^.Next <> nil) then
         AddFrame.SetMaxTime(SelectedObj^.KeyFrames^.Next.Inf.StartTime);
@@ -475,7 +492,12 @@ procedure TMainForm.LoadBackground(FileRoad: String);
 begin
   if BackGround = nil then
     BackGround := TImage.Create(Self);
-  BackGround.Picture.LoadFromFile(FileRoad);
+  try
+    BackGround.Picture.LoadFromFile(FileRoad);
+  except
+    ShowMessage('Файл ' + FileRoad + ' не найден');
+    FreeAndNil(BackGround);
+  end;
   RoadToBackGround := FileRoad;
 end;
 
@@ -607,6 +629,11 @@ begin
   end;
 end;
 
+procedure TMainForm.actSaveAsExecute(Sender: TObject);
+begin
+  GifExport.ShowModal;
+end;
+
 function ColorToTriple(const Color: TColor): TRGBTriple;
 begin
   Result.rgbtBlue := Color shr 16 and $FF;
@@ -672,19 +699,36 @@ begin
 
 end;
 
-procedure TMainForm.DrawToBuffer;
+procedure TMainForm.DrawToBuffer(ScreenWidth: Integer = 0;ScreenHeight: Integer = 0);
 var
   Temp: PSceneObj;
   Clip: TPngImage;
   Cadr: Integer;
   Card: TPngImage;
   VW, VH, ShiftX, ShiftY: Integer;
+  ScaleScreene, ShiftScreenX, ShiftScreenY: Real;
 begin
-  FBuffer.Width := pbScene.Width; //
-  VW := Round(STANDARTSCENE_X * ScaleScreene);
-  FBuffer.Height := pbScene.Height; //
-  VH := Round(STANDARTSCENE_y * ScaleScreene);
+  if (ScreenWidth <> 0) and (ScreenHeight <> 0) then
+  begin
+    ScaleScreene := 2 * Max(ScreenWidth/STANDARTSCENE_X, ScreenHeight/STANDARTSCENE_Y);
+    ShiftScreenX := 0.5 + 0.75 * (STANDARTSCENE_X / STANDARTSCENE_Y - ScreenWidth /  ScreenHeight);
+    ShiftScreenY := 0.5;
+    FBuffer.Width := ScreenWidth;
+    FBuffer.Height := ScreenHeight;
 
+  end
+  else
+  begin
+    ScaleScreene := Self.ScaleScreene;
+    ShiftScreenX := Self.ShiftScreenX;
+    ShiftScreenY := Self.ShiftScreenY;
+    FBuffer.Width := pbScene.Width;
+    FBuffer.Height := pbScene.Height;
+
+  end;
+
+  VW := Round(STANDARTSCENE_X * ScaleScreene);
+  VH := Round(STANDARTSCENE_y * ScaleScreene);
   ShiftX := Round(FBuffer.Width * ShiftScreenX);
   ShiftY := Round(FBuffer.Height * ShiftScreenY);
   // FBuffer.PixelFormat := pf32bit;
@@ -713,7 +757,7 @@ begin
         (EndTime > TimeCursor) then
       begin
         Clip.Assign(GetAnimation(Temp^.Obj, Temp^.KeyFrames^.Inf.Animation));
-        Cadr := (TimeCursor div 150) mod (Clip.Width div Clip.Height);
+        Cadr := (TimeCursor div 150) mod (Clip.Width div Temp^.Obj.MainImage.Width);
         if Temp^.KeyFrames^.Prev <> nil then
           Temp^.CurPoint := Lerp(Temp^.KeyFrames^.Prev^.Inf.EndPoint, EndPoint,
             TimeCursor, StartTime, EndTime)
@@ -966,6 +1010,79 @@ begin
       isPlay := false;
   end
 
+end;
+
+procedure TMainForm.MakeGIF(Road: String; Delay: Cardinal; PixelFormat: TPixelFormat; SizeX, SizeY: Integer; Progress:TProgressHand);
+var
+  TempCursor, AnimDelay: Cardinal;
+  GIF: TGIFImage;
+  Temp: PSceneObj;
+  KTemp: PSceneKeyFrame;
+  Frame: TGIFFrame;
+  GCExt: TGIFGraphicControlExtension;
+  LoopExt: TGIFAppExtNSLoop;
+begin
+  TempCursor := TimeCursor;
+  GIF := TGIFImage.Create;
+  Temp := SceneObjs^.Next;
+
+  while Temp <> nil do
+  begin
+
+    KTemp := Temp.KeyFrames;
+    Temp.CurPoint := KTemp.Inf.EndPoint;
+    while KTemp <> nil do
+    begin
+      if KTemp^.Inf.EndTime > EndTime then
+      begin
+        EndTime := KTemp^.Inf.EndTime;
+      end;
+      KTemp := KTemp^.Next
+    end;
+    Temp := Temp.Next;
+  end;
+  Temp := SelectedObj;
+  FBuffer.PixelFormat := PixelFormat;
+  try
+
+    SelectedObj := nil;
+    TimeCursor := 0;
+    EditTime(TimeCursor, SceneObjs);
+    DrawToBuffer(SizeX,SizeY);
+    Frame := GIF.Add(FBuffer);
+    // Netscape Loop extension must be the first extension in the first frame!
+    LoopExt := TGIFAppExtNSLoop.Create(Frame);
+    LoopExt.Loops := 0; // Number of loops (0 = forever)
+
+    AnimDelay :=  Max(Delay div 10, 1);
+    // Add Graphic Control Extension
+    GCExt := TGIFGraphicControlExtension.Create(Frame);
+    GCExt.Delay := AnimDelay; // Animation delay (30 = 300 mS)
+
+    While TimeCursor <= EndTime do
+    begin
+
+      if Progress(Round((TimeCursor+1) / (EndTime + 1) * 100)) then
+        Exit;
+      Inc(TimeCursor, Delay);
+      EditTime(TimeCursor, SceneObjs);
+      DrawToBuffer(SizeX,SizeY);
+      Frame := GIF.Add(FBuffer);
+      GCExt := TGIFGraphicControlExtension.Create(Frame);
+      GCExt.Delay := AnimDelay;
+      Application.ProcessMessages;
+    end;
+    GIF.OptimizeColorMap;
+    GIF.Optimize([ooMerge, ooCrop], rmNone, dmNearest, 0);
+
+    GIF.SaveToFile(Road);
+  finally
+    GIF.Free;
+    TimeCursor := TempCursor;
+    EditTime(TimeCursor, SceneObjs);
+    SelectedObj := Temp;
+    FBuffer.PixelFormat := pf16bit;
+  end;
 end;
 
 procedure TMainForm.spLeftMoved(Sender: TObject);

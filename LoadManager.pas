@@ -1,23 +1,25 @@
 unit LoadManager;
 
 interface
+
 uses
   System.Generics.Collections, Winapi.Windows, Vcl.Imaging.PngImage;
+
 type
-  TFrameAnimsObj = TDictionary<string,TPngImage>;
+  TFrameAnimsObj = TDictionary<string, TPngImage>;
   PLoadObj = ^TLoadObj;
+
   TLoadObj = record
     Animations: TFrameAnimsObj;
     MainImage: TPngImage;
-    Name: String
-  end;
+    Name: String end;
 
-  TLoadObjs = TDictionary<string,PLoadObj>;
+    TLoadObjs = TDictionary<string, PLoadObj>;
 
-procedure LoadFile(var LoadObjs:TLoadObjs);
-procedure FreeLoadObjs(var LoadObjs: TLoadObjs);
-procedure SetLoadResurse(Road: String);
-function GetAnimation(LoadObj:PLoadObj; Animation: String):TPngImage;
+    procedure LoadFile(var LoadObjs: TLoadObjs);
+    procedure FreeLoadObjs(var LoadObjs: TLoadObjs);
+    procedure SetLoadResurse(Road: String);
+    function GetAnimation(LoadObj: PLoadObj; Animation: String): TPngImage;
 
 implementation
 
@@ -32,10 +34,10 @@ begin
   ResurseRoad := Road;
 end;
 
-procedure LoadFile(var LoadObjs:TLoadObjs);
+procedure LoadFile(var LoadObjs: TLoadObjs);
 var
   DirObjs, FileAims: TArray<String>;
-  TempObj :PLoadObj;
+  TempObj: PLoadObj;
   i, j: Integer;
   isNorm: Boolean;
 begin
@@ -56,11 +58,12 @@ begin
       begin
         isNorm := true;
         TempObj^.MainImage := TPngImage.Create;
-        TempObj^.MainImage.LoadFromFile(ResurseRoad + '\' + DirObjs[i] + '\' + FileAims[j]);
+        TempObj^.MainImage.LoadFromFile(ResurseRoad + '\' + DirObjs[i] + '\' +
+          FileAims[j]);
       end
       else
       begin
-        TempObj^.Animations.Add(FileAims[j],nil);
+        TempObj^.Animations.Add(FileAims[j], nil);
       end;
 
     end;
@@ -107,18 +110,23 @@ begin
   end;
 end;
 
-function GetAnimation(LoadObj:PLoadObj; Animation: String):TPngImage;
+function GetAnimation(LoadObj: PLoadObj; Animation: String): TPngImage;
 begin
   Result := TPngImage.Create;
-  if LoadObj^.Animations[Animation] <> nil then
+  if LoadObj^.Animations.ContainsKey(Animation) then
   begin
-    Result := LoadObj^.Animations[Animation];
+    if LoadObj^.Animations[Animation] <> nil then
+    begin
+      Result := LoadObj^.Animations[Animation];
+    end
+    else
+    begin
+      Result.LoadFromFile(ResurseRoad + '\' + LoadObj.Name + '\' + Animation);
+      LoadObj^.Animations[Animation] := Result;
+    end;
   end
   else
-  begin
-    Result.LoadFromFile(ResurseRoad + '\' + LoadObj.Name + '\' + Animation);
-    LoadObj^.Animations[Animation] := Result;
-  end;
+  Result := LoadObj^.MainImage;
 end;
 
 end.

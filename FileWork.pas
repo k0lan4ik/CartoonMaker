@@ -39,7 +39,7 @@ begin
   if FileMode = fmAfc then
   begin
     OpenDialog.FileName := 'Animation.afc';
-    OpenDialog.Filter := 'AFC files (*.afc)|*.afc|All files (*.*)|*.*';
+    OpenDialog.Filter := 'AFC files (*.afc)|*.afc';
     OpenDialog.DefaultExt := 'afc';
   end;
   if OpenDialog.Execute then

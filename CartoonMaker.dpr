@@ -14,7 +14,8 @@ uses
   CustomSpinEdit in 'CustomSpinEdit.pas',
   TimeLine in 'TTimeLine\TimeLine.pas',
   FileWork in 'FileWork.pas',
-  DialogRenames in 'DialogRenames.pas' {DialogRename};
+  DialogRenames in 'DialogRenames.pas' {DialogRename},
+  GifConvert in 'GifConvert.pas' {GifExport};
 
 {$R *.res}
 
@@ -24,5 +25,6 @@ begin
   Application.CreateForm(TMainForm, MainForm);
   Application.CreateForm(TAddFrame, AddFrame);
   Application.CreateForm(TDialogRename, DialogRename);
+  Application.CreateForm(TGifExport, GifExport);
   Application.Run;
 end.

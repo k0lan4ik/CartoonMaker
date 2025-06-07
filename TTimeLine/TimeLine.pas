@@ -531,6 +531,8 @@ var
   Position, Index: Integer;
 begin
   inherited;
+  if not FIsAction then
+    CursorAction := caDefault;
   if FMoveTimeCursor and (X > FObjectZoneWight) then
   begin
     CurrentPosition := XToTime(X);
@@ -560,8 +562,6 @@ begin
           else
             CursorAction := caMove
       end
-      else
-        CursorAction := caDefault;
     end
     else
     begin

@@ -21,8 +21,8 @@ type
     cbIsMirror: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure seTimeChange(Sender: TObject);
-    procedure SetParams(const Time: Cardinal; const Anims: TFrameAnimsObj;const isMirror: Boolean);
-    procedure GetParams(var Time: Cardinal; var Anim: String; var isMirror: Boolean);
+    procedure SetParams(const Time,TimeToNext: Cardinal;
+  const Anims: TFrameAnimsObj;const isMirror: Boolean);procedure GetParams(var Time: Cardinal; var Anim: String; var isMirror: Boolean);
     procedure SetMaxTime(const Time: Cardinal);
   private
     { Private declarations }
@@ -54,12 +54,13 @@ begin
   seTime.MaxValue := Time;
 end;
 
-procedure TAddFrame.SetParams(const Time: Cardinal;
+procedure TAddFrame.SetParams(const Time,TimeToNext: Cardinal;
   const Anims: TFrameAnimsObj;const isMirror: Boolean);
 var
   Anim: String;
 begin
   seTime.Value := Time / 1000;
+  seTime.MaxValue := (TimeToNext) / 1000;
   cbIsMirror.Checked := isMirror;
   cbAnim.Items.Clear;
   cbAnim.Text := '';

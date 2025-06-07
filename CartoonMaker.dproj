@@ -113,6 +113,10 @@
             <Form>DialogRename</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="GifConvert.pas">
+            <Form>GifExport</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

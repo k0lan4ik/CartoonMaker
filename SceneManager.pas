@@ -3,7 +3,7 @@ unit SceneManager;
 interface
 
 uses
-  LoadManager, Types, SysUtils;
+  LoadManager, Types, SysUtils, Vcl.Imaging.GIFImg, Vcl.Graphics;
 
 type
   TSceneKeyFrameInf = record
@@ -414,5 +414,7 @@ begin
     CloseFile(F);
   end;
 end;
+
+
 
 end.

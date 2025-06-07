@@ -1,37 +1,40 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899.12.30 00:00:00.000.254,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.044,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\DialogRenames.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.456,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\CustomSpinEdit.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.390,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\DialogAddFrame.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.044,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.012,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.321,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.172,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\GifConvert.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.609,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.254,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.730,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\AnimationClass.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.044,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\DialogRenames.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.482,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.268,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.172,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.dfm=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\GifConvert.dfm</Transaction>
     <Transaction>1899.12.30 00:00:00.000.044,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.dfm=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\DialogRenames.dfm</Transaction>
     <Transaction>1899.12.30 00:00:00.000.390,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.dfm=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\DialogAddFrame.dfm</Transaction>
     <Transaction>1899.12.30 00:00:00.000.577,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\TTimeLine\TimeLine.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.437,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\TimeManager.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\TimeManater.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.712,D:\Университет\Delphi\Unit2.dfm=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Main.dfm</Transaction>
     <Transaction>1899.12.30 00:00:00.000.364,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\SceneObject.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.261,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\LoadManager.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.870,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.063,=D:\Университет\Delphi\Unit2.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.913,=D:\Университет\Delphi\Unit2.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.712,D:\Университет\Delphi\Unit2.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Main.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.437,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\TimeManager.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\TimeManater.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.582,=D:\Университет\Delphi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.543,=D:\Университет\Delphi\Unit2.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.200,=D:\Университет\Delphi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.063,=D:\Университет\Delphi\Unit2.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.635,D:\Университет\Delphi\Project3.dproj=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\CartoonMaker.dproj</Transaction>
     <Transaction>1899.12.30 00:00:00.000.897,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\CreateSpline.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.705,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\SceneManager.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.543,=D:\Университет\Delphi\Unit2.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.482,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.327,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.609,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.331,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\FileWork.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.582,=D:\Университет\Delphi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.712,D:\Университет\Delphi\Unit2.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Main.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.913,=D:\Университет\Delphi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.870,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.321,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.012,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.044,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.193,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\TimeManater.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.250,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\InteractiveClass.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.331,D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\FileWork.pas=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.327,=D:\Университет\1 курс\ОАиП\Курсовая\CartoonMaker\Unit1.pas</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="TTimeLine"/>
@@ -51,5 +54,7 @@
     <File Path="FileWork.pas"/>
     <File Path="DialogRenames.pas"/>
     <File Path="DialogRenames.dfm"/>
+    <File Path="GifConvert.pas"/>
+    <File Path="GifConvert.dfm"/>
   </ProjectSortOrder>
 </BorlandProject>

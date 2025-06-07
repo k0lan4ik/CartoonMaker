@@ -66,8 +66,6 @@ object MainForm: TMainForm
     Height = 160
     Align = alBottom
     TabOrder = 1
-    ExplicitTop = 272
-    ExplicitWidth = 642
   end
   object Loaded: TListBox
     Left = 0
@@ -87,7 +85,6 @@ object MainForm: TMainForm
     ParentFont = False
     TabOrder = 2
     OnDrawItem = LoadedDrawItem
-    ExplicitHeight = 229
   end
   object ToolBar: TToolBar
     Left = 0
@@ -103,7 +100,6 @@ object MainForm: TMainForm
     ShowHint = True
     TabOrder = 0
     Transparent = False
-    ExplicitWidth = 642
     object tbFileNew: TToolButton
       Left = 0
       Top = 0
@@ -1248,7 +1244,7 @@ object MainForm: TMainForm
     end
     object actOpenFile: TAction
       Category = 'File'
-      Caption = #1054#1090#1082#1088#1099#1090#1100
+      Caption = #1054#1090#1082#1088#1099#1090#1100'...'
       Hint = #1054#1090#1082#1088#1099#1090#1100' '#1092#1072#1081#1083
       ImageIndex = 2
       ShortCut = 16463
@@ -1256,7 +1252,7 @@ object MainForm: TMainForm
     end
     object actFileSave: TAction
       Category = 'File'
-      Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100
+      Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100'...'
       Hint = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1092#1072#1081#1083
       ImageIndex = 1
       ShortCut = 16467
@@ -1281,6 +1277,7 @@ object MainForm: TMainForm
       Caption = #1054#1089#1090#1072#1085#1086#1074#1080#1090#1100
       Hint = #1054#1089#1090#1072#1085#1086#1074#1080#1090#1100
       ImageIndex = 5
+      ShortCut = 16507
       OnExecute = actPauseExecute
     end
     object actCangeBackGround: TAction
@@ -1305,6 +1302,13 @@ object MainForm: TMainForm
       ShortCut = 16466
       OnExecute = actRenameObjExecute
     end
+    object actSaveAs: TAction
+      Category = 'File'
+      Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1082#1072#1082'...'
+      Hint = #1069#1082#1089#1087#1086#1088#1090' '#1072#1085#1080#1084#1072#1094#1080#1080' '#1074' GIF'
+      ShortCut = 8315
+      OnExecute = actSaveAsExecute
+    end
   end
   object MainMenu: TMainMenu
     Images = IconList
@@ -1320,6 +1324,9 @@ object MainForm: TMainForm
       end
       object N4: TMenuItem
         Action = actFileSave
+      end
+      object N16: TMenuItem
+        Action = actSaveAs
       end
     end
     object N5: TMenuItem
